@@ -316,6 +316,8 @@ button.trow:hover{background:rgba(255,255,255,.04)}
 .dwrap .panel,.dwrap .board,.dwrap .result{box-shadow:none}
 .dwrap .ctx,.dwrap .grid2{margin:0}
 @media (max-width:720px){ .dwrap{padding:12px 8px 16px;margin:0 -8px 12px} }
+.dds .ms{min-width:300px}
+.mslist{left:0;right:0;width:auto}
 </style></head><body>
 
 <header class="appbar"><div class="in">
@@ -674,7 +676,7 @@ function weeks(){
 }
 function renderWeek(){
   const W=weeks(), sel=$("weekSel");
-  if(!W.length){ sel.innerHTML='<option>Geen wedstrijden</option>'; $("tabs").innerHTML=""; $("tbl").innerHTML='<p class="none">Geen komende wedstrijden in de data.</p>'; return; }
+  if(!W.length){ $("detailHome").appendChild($("detailWrap")); $("detailWrap").hidden=true; sel.innerHTML='<option>Geen wedstrijden</option>'; $("tabs").innerHTML=""; $("tbl").innerHTML=`<p class="none">${state.sel.length?"Geen komende wedstrijden in de data.":"Geen competitie geselecteerd. Kies er een of meer in het menu Competities."}</p>`; return; }
   if(!W.find(w=>w.key===state.week)) state.week=W[0].key;
   const shortD=s=>toD(s).toLocaleDateString("nl-NL",{day:"numeric",month:"short"});
   sel.innerHTML=W.map((w,i)=>`<option value="${w.key}">${shortD(w.from)}${w.to!==w.from?" – "+shortD(w.to):""} · ${w.fx.length} duels</option>`).join("");
@@ -999,13 +1001,14 @@ function pickDefault(force){
   const known = state.comp==="nl" ? (t=>!!(DATA.nl?.elo||{})[t]) : (t=>R.idx[t]!==undefined);
   if(!force && state.home && known(state.home) && known(state.away)) return;
   const W=weeks(); const f=W.length? W[0].fx[0] : null;
+  state.open=false;
   if(f){ state.fk=f.k; use(f.k); state.home=f[1]; state.away=f[2]; state.date=f[0]; state.fixture=f.k+"#"+f.slice(0,3).join("|"); state.week=W[0].key; state.day="all"; }
   else { const k=state.sel.find(x=>!x.startsWith("nl:")&&!CMAP[x]?.na)||"ere"; state.fk=k; use(k); state.home=R.T[0]; state.away=R.T[1]; state.date=null; state.fixture=null; }
 }
 function applyComp(){
   use(state.fk);
   const nl=state.comp==="nl", act=state.sel.filter(k=>!CMAP[k]?.na);
-  const sum = act.length===1? cFull(act[0]) : `${act.length} competities`;
+  const sum = !act.length? "Geen competitie gekozen" : act.length===1? cFull(act[0]) : `${act.length} competities`;
   $("compTitle").textContent = sum;
   $("compSum").textContent = sum;
   $("appsub").textContent = nl ? `Internationaal · ${cName(state.fk)} 2026/27 · Elo-sterkte, vorm en onderlinge duels` : `${cFull(state.fk)} 2026/27 · seizoen, historie, vorm${DATA.noAbs?"":" en blessures"}`;
@@ -1020,7 +1023,7 @@ function loadLeague(k, d, live){
   LG[k]=d; delete RC[k]; LIVE=live||LIVE; refresh(false);
 }
 function buildCompList(){
-  let html=`<div class="msbtns"><button type="button" data-all="1">Alles</button><button type="button" data-all="0">Alleen Eredivisie</button></div>`, last="";
+  let html=`<div class="msbtns"><button type="button" data-all="1">Alles</button><button type="button" data-all="0">Alles deselecteren</button></div>`, last="";
   COMPS.forEach(c=>{
     if(c.c!==last){ html+=`<div class="msg">${esc(c.c)}</div>`; last=c.c; }
     html+= c.na ? `<label class="na"><input type="checkbox" disabled value="${c.k}">${esc(c.c+" · "+c.n)}<small>geen databron</small></label>`
@@ -1031,16 +1034,15 @@ function buildCompList(){
   $("compList").addEventListener("change",e=>{
     const i=e.target; if(!i.matches("input")) return;
     const s=new Set(state.sel); i.checked? s.add(i.value) : s.delete(i.value);
-    if(!s.size){ i.checked=true; return; }
     state.sel=COMPS.map(c=>c.k).filter(k=>s.has(k)); state.week=null; save(); refresh(false);
   });
   $("compList").addEventListener("click",e=>{
     const b=e.target.closest("button[data-all]"); if(!b) return;
-    state.sel = b.dataset.all==="1"? COMPS.filter(c=>!c.na).map(c=>c.k) : ["ere"];
+    state.sel = b.dataset.all==="1"? COMPS.filter(c=>!c.na).map(c=>c.k) : [];
     state.week=null; save(); refresh(false);
   });
   document.addEventListener("click",e=>{ const d=$("compMs"); if(d.open && !d.contains(e.target)) d.open=false; });
-  try{ const v=JSON.parse(localStorage.getItem("wk_sel")||"null"); if(Array.isArray(v)){ const ok=v.filter(k=>CMAP[k]&&!CMAP[k].na); if(ok.length) state.sel=ok; } }catch(e){}
+  try{ const v=JSON.parse(localStorage.getItem("wk_sel")||"null"); if(Array.isArray(v)){ state.sel=v.filter(k=>CMAP[k]&&!CMAP[k].na); } }catch(e){}
 }
 
 function bind(){

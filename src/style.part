@@ -314,3 +314,5 @@ button.trow:hover{background:rgba(255,255,255,.04)}
 .dwrap .panel,.dwrap .board,.dwrap .result{box-shadow:none}
 .dwrap .ctx,.dwrap .grid2{margin:0}
 @media (max-width:720px){ .dwrap{padding:12px 8px 16px;margin:0 -8px 12px} }
+.dds .ms{min-width:300px}
+.mslist{left:0;right:0;width:auto}
