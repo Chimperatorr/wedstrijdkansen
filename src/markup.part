@@ -164,21 +164,22 @@ const nlDate = s => toD(s).toLocaleDateString("nl-NL",{weekday:"short",day:"nume
 
 let R = null; // ratings actieve competitie
 function dataKey(k){ return k==="ere"||k.startsWith("nl:")? "main" : k; }
-function use(k){
+function use(k, pre){
   if(!k || (dataKey(k)!=="main" && !LG[k])) k="ere";
   state.comp = k.startsWith("nl:")? "nl" : k;
   state.league = k.startsWith("nl:")? k.slice(3) : "all";
   const dk=dataKey(k);
   DATA = dk==="main"? MAIN : LG[k];
-  const rk = dk==="main"? "ere" : k;
-  if(!RC[rk]) RC[rk]=ratings();
+  const cut = pre && state.comp!=="nl" ? weekStart(todayISO()) : null;
+  const rk = (dk==="main"? "ere" : k) + (cut? "#"+cut : "");
+  if(!RC[rk]) RC[rk]=ratings(cut);
   R = RC[rk];
 }
 function valid(d){ return d && Array.isArray(d.teams) && Array.isArray(d.matches) && d.teams.length>1; }
 
-function ratings(){
+function ratings(cut){
   const D=DATA, T=D.teams, n=T.length, idx=Object.fromEntries(T.map((t,i)=>[t,i]));
-  const played=D.matches.filter(m=>idx[m[1]]!==undefined&&idx[m[2]]!==undefined);
+  const played=D.matches.filter(m=>idx[m[1]]!==undefined&&idx[m[2]]!==undefined&&(!cut||m[0]<cut));
   const ref = D.matches.length? D.matches.reduce((a,m)=>m[0]>a?m[0]:a,"") : todayISO();
   const now = toD(ref).getTime();
   // prior uit vorig seizoen
@@ -346,13 +347,21 @@ function allFixtures(){
     if(CMAP[k]?.na) continue; use(k);
     const src = state.comp==="nl" ? (DATA.nl?.fixtures||[]).filter(f=>state.league==="all"||nlGroup(f[1]).startsWith(state.league)) : (DATA.fixtures||[]).filter(f=>R.idx[f[1]]!==undefined && R.idx[f[2]]!==undefined);
     src.forEach(f=>{ const x=f.slice(); x.k=k; x.o=order.indexOf(k); out.push(x); });
+    // gespeelde duels van deze speelweek (vanaf maandag) blijven zichtbaar met de uitslag
+    const ws=weekStart(todayISO());
+    const played = state.comp==="nl" ? (DATA.nl?.matches||[]).filter(m=>state.league==="all"||nlGroup(m[1]).startsWith(state.league)) : (DATA.matches||[]).filter(m=>R.idx[m[1]]!==undefined && R.idx[m[2]]!==undefined);
+    played.filter(m=>m[0]>=ws).forEach(m=>{ const x=[m[0],m[1],m[2],""]; x.res=[m[3],m[4]]; x.k=k; x.o=order.indexOf(k); out.push(x); });
   }
   use(cur);
   return out;
 }
+function weekStart(iso){ const d=toD(iso); return new Date(d.getTime()-((d.getUTCDay()+6)%7)*dayMs).toISOString().slice(0,10); }
+function tipHit(tip,res){ const o=res[0]>res[1]?"1":res[0]<res[1]?"2":"X"; return tip.includes(o); }
 function weeks(){
   const today=todayISO(), map=new Map();
-  allFixtures().filter(f=>f[0]>=today)
+  const ws=weekStart(today);
+  const all=allFixtures(), done=new Set(all.filter(f=>f.res).map(f=>f.k+"|"+f[1]+"|"+f[2]));
+  all.filter(f=>f[0]>=ws && (f.res || !done.has(f.k+"|"+f[1]+"|"+f[2])))
     .sort((a,b)=>(a[0]+(a[3]||"")).localeCompare(b[0]+(b[3]||"")) || a.o-b.o)
     .forEach(f=>{ const d=toD(f[0]); const mon=new Date(d.getTime()-((d.getUTCDay()+6)%7)*dayMs).toISOString().slice(0,10);
       if(!map.has(mon)) map.set(mon,[]); map.get(mon).push(f); });
@@ -379,20 +388,20 @@ function renderWeek(){
     let lastK=null;
     wk.fx.filter(f=>f[0]===d).sort((x,y)=>multi?(x.o-y.o||(x[3]||"").localeCompare(y[3]||"")):0).forEach(f=>{
       if(multi && f.k!==lastK){ html+=`<div class="tcomp">${esc(cFull(f.k))}</div>`; lastK=f.k; }
-      use(f.k);
+      use(f.k, !!f.res);
       const r=fullModel(f[1],f[2],f[0]), s=summary(r), key=f.k+"#"+f.slice(0,3).join("|"), mk=r.market;
       const val = mk ? [r.ph,r.pd,r.pa].map((p,k)=>p*mk.o[k]-1) : null;
       const tipK = {"1":[0],"X":[1],"2":[2],"1X":[0,1],"X2":[1,2]}[s.tip]||[];
       const hasVal = val && tipK.some(k=>val[k]>0.03);
       const hi=k=>s.best===k?" top":"";
       const ix=s.index, ixc=ix>0.25?"ih":ix<-0.25?"ia":"";
-      html+=`<button type="button" class="trow${state.fixture===key?" sel":""}" data-k="${esc(key)}">
+      html+=`<button type="button" class="trow${state.fixture===key?" sel":""}${f.res?" done":""}" data-k="${esc(key)}"${f.res?` data-res="${f.res.join("-")}"`:""}>
         <span class="t num">${esc(f[3]||"")}</span>
         <span class="m"><span class="hn">${esc(f[1])}</span><span class="an">${esc(f[2])}</span>${state.comp==="nl"?`<span class="grp">Groep ${esc(nlGroup(f[1]))}</span>`:""}</span>
         <span class="c num ix ${ixc}" title="Verschil in verwachte goals">${ix>=0?"+":""}${ix.toFixed(2).replace(".",",")}</span>
         <span class="c num p p1${hi("1")}"><i>1</i>${pc(r.ph)}%</span><span class="c num p px${hi("X")}"><i>X</i>${pc(r.pd)}%</span><span class="c num p p2${hi("2")}"><i>2</i>${pc(r.pa)}%</span>
-        <span class="c tip">${s.tip}${hasVal?'<sup title="Waarde volgens het model">★</sup>':""}</span>
-        <span class="c num sc">${s.sc.i}-${s.sc.j}</span>
+        <span class="c tip">${s.tip}${f.res?(tipHit(s.tip,f.res)?'<sup class="hit" title="Tip klopte">✓</sup>':'<sup class="miss" title="Tip klopte niet">✗</sup>'):(hasVal?'<sup title="Waarde volgens het model">★</sup>':"")}</span>
+        <span class="c num sc${f.res?" fin":""}" ${f.res?`title="Eindstand; voorspeld was ${s.sc.i}-${s.sc.j}"`:""}>${f.res?`<b>${f.res[0]}-${f.res[1]}</b><small>${s.sc.i}-${s.sc.j}</small>`:`${s.sc.i}-${s.sc.j}`}</span>
         <span class="c num g" title="${esc(s.g)} (${pc(s.gP)}%)">${s.gShort}</span>
         <span class="c bt ${s.bt==="Ja"?"y":s.bt==="Nee"?"n":""}" title="Beide teams scoren ${pc(r.btts)}%">${s.bt}</span>
         <span class="c od num">${mk?`<span class="src" title="${esc(ONAME())}">${OTAG()}</span>${mk.o.map((x,k)=>`<span class="${s.best===["1","X","2"][k]?"b":""}">${x.toFixed(2)}</span>`).join("")}`:'<span class="none">–</span>'}</span>
@@ -406,7 +415,7 @@ function renderWeek(){
   if(selRow){ selRow.after(dw); dw.hidden=false; } else dw.hidden=true;
   $("tbl").querySelectorAll("button.trow").forEach(b=>b.addEventListener("click",()=>{
     if(state.fixture===b.dataset.k && state.open!==false){ state.open=false; renderWeek(); return; }
-    const [c,rest]=b.dataset.k.split("#"), [d,h,a]=rest.split("|"); state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=b.dataset.k; state.open=true; applyComp(); setStamp(LIVE); renderAll();
+    const [c,rest]=b.dataset.k.split("#"), [d,h,a]=rest.split("|"); state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=b.dataset.k; state.fres=b.dataset.res||null; state.open=true; applyComp(); setStamp(LIVE); renderAll();
     const row=[...$("tbl").querySelectorAll("button.trow")].find(x=>x.dataset.k===state.fixture);
     if(row){ const bar=document.querySelector(".appbar"), off=(bar&&getComputedStyle(bar).position!=="static"?bar.offsetHeight:0)+8;
       window.scrollTo({top:row.getBoundingClientRect().top+scrollY-off,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}); }
@@ -471,7 +480,8 @@ function render(){
   else if(gap<0.07) v=`Een open wedstrijd. ${hn} en ${an} ontlopen elkaar weinig; een gelijkspel zit er met ${fmtP(r.pd)} goed in.`;
   else if(fav[1]>0.6) v=`${fav[0]} is duidelijk favoriet met ${fmtP(fav[1])} winkans.`;
   else v=`${fav[0]} is licht favoriet met ${fmtP(fav[1])} winkans.`;
-  $("verdict").textContent=v+when+(r.blended?` Inclusief ${r.market.src==="bet365"?"bet365-quoteringen":"quoteringen ("+r.market.src+")"} (model alleen: ${fmtP(r.model.ph)} / ${fmtP(r.model.pd)} / ${fmtP(r.model.pa)}).`:"");
+  const fin = state.fres && state.fixture && state.fixture.endsWith(`${state.date}|${hn}|${an}`) ? ` Eindstand: ${state.fres.replace("-","–")}. De kansen hierboven zijn berekend met de uitslagen van vóór deze speelweek.` : "";
+  $("verdict").textContent=v+when+fin+(r.blended?` Inclusief ${r.market.src==="bet365"?"bet365-quoteringen":"quoteringen ("+r.market.src+")"} (model alleen: ${fmtP(r.model.ph)} / ${fmtP(r.model.pd)} / ${fmtP(r.model.pa)}).`:"");
 
   advice(r);
   renderH2H(r);
@@ -667,7 +677,7 @@ function saveManual(){
   saveT=setTimeout(async()=>{ try{ await ODB.doc("odds/manual").set({odds:MANUAL,updated:new Date().toISOString()}); $("oddsSave").textContent="Opgeslagen"; }
     catch(e){ $("oddsSave").textContent="Opslaan mislukt"; } },600);
 }
-function renderAll(){ use(state.fk); syncSliders(); renderWeek(); use(state.fk); render(); }
+function renderAll(){ use(state.fk); syncSliders(); renderWeek(); use(state.fk, !!state.fres); render(); }
 
 function setStamp(live){
   $("dot").className="dot"+(live?" live":"");
@@ -685,7 +695,7 @@ function pickDefault(force){
   const known = state.comp==="nl" ? (t=>!!(DATA.nl?.elo||{})[t]) : (t=>R.idx[t]!==undefined);
   if(!force && state.home && known(state.home) && known(state.away)) return;
   const W=weeks(); const f=W.length? W[0].fx[0] : null;
-  state.open=false;
+  state.open=false; state.fres=f&&f.res?f.res.join("-"):null;
   if(f){ state.fk=f.k; use(f.k); state.home=f[1]; state.away=f[2]; state.date=f[0]; state.fixture=f.k+"#"+f.slice(0,3).join("|"); state.week=W[0].key; state.day="all"; }
   else { const k=state.sel.find(x=>!x.startsWith("nl:")&&!CMAP[x]?.na)||"ere"; state.fk=k; use(k); state.home=R.T[0]; state.away=R.T[1]; state.date=null; state.fixture=null; }
 }
@@ -701,10 +711,10 @@ function applyComp(){
 }
 function refresh(force){ pickDefault(force); applyComp(); setStamp(LIVE); renderAll(); }
 function loadData(d, live){
-  MAIN=d; delete RC.ere; LIVE=live||LIVE; refresh(false);
+  MAIN=d; Object.keys(RC).forEach(x=>{ if(x==="ere"||x.startsWith("ere#")) delete RC[x]; }); LIVE=live||LIVE; refresh(false);
 }
 function loadLeague(k, d, live){
-  LG[k]=d; delete RC[k]; LIVE=live||LIVE; refresh(false);
+  LG[k]=d; Object.keys(RC).forEach(x=>{ if(x===k||x.startsWith(k+"#")) delete RC[x]; }); LIVE=live||LIVE; refresh(false);
 }
 function buildCompList(){
   let html=`<div class="msbtns"><button type="button" data-all="1">Alles</button><button type="button" data-all="0">Alles deselecteren</button></div>`, last="";

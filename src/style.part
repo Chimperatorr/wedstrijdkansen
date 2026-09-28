@@ -347,3 +347,7 @@ button.trow:hover{background:rgba(255,255,255,.04)}
 .cbform button{border:0;background:var(--primary);color:#121212;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:1rem}
 @media (max-width:720px){ .cb{right:12px;bottom:12px} .cb[data-open="true"]{left:8px;right:8px;bottom:8px} .cbpanel{width:100%;height:min(75vh,600px)} }
 body{padding-bottom:96px}
+.trow .sc.fin{display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.trow .sc.fin b{color:var(--ink);font-weight:700}
+.trow .sc.fin small{font-size:.66rem;color:var(--faint)}
+.trow sup.hit{color:var(--secondary)} .trow sup.miss{color:#CF6679}

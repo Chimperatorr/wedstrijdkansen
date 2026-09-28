@@ -25,14 +25,14 @@ const addDays=(iso,n)=>new Date(toD(iso).getTime()+n*dayMs).toISOString().slice(
 function pool(comps, from, to){
   const keep=state.sel, cur=state.fk, out=[];
   state.sel=comps;
-  const fx=allFixtures().filter(f=>f[0]>=from&&f[0]<=to);
+  const fx=allFixtures().filter(f=>!f.res&&f[0]>=from&&f[0]<=to);
   state.sel=keep;
   fx.forEach(f=>{ use(f.k); const r=fullModel(f[1],f[2],f[0]), s=summary(r);
     out.push({k:f.k, key:f.k+"#"+f.slice(0,3).join("|"), d:f[0], t:f[3]||"", h:f[1], a:f[2], r, s, o:r.market?r.market.o:null}); });
   use(cur);
   return out.sort((x,y)=>(x.d+x.t).localeCompare(y.d+y.t));
 }
-function firstDate(comps, from){ const keep=state.sel, cur=state.fk; state.sel=comps; const d=allFixtures().map(f=>f[0]).filter(d=>d>=from).sort()[0]; state.sel=keep; use(cur); return d; }
+function firstDate(comps, from){ const keep=state.sel, cur=state.fk; state.sel=comps; const d=allFixtures().filter(f=>!f.res).map(f=>f[0]).filter(d=>d>=from).sort()[0]; state.sel=keep; use(cur); return d; }
 function scope(q){
   const today=todayISO(); let from=today, to=addDays(today,6), label="de komende 7 dagen", rel=false;
   if(/vandaag/.test(q)){ to=today; label="vandaag"; }
@@ -134,7 +134,7 @@ function openFixture(k){
   const [c,rest]=k.split("#"), [d,h,a]=rest.split("|");
   if(!state.sel.includes(c)){ state.sel=COMPS.map(x=>x.k).filter(x=>x===c||state.sel.includes(x)); try{localStorage.setItem("wk_sel",JSON.stringify(state.sel));}catch(e){} }
   const dd=toD(d); state.week=new Date(dd.getTime()-((dd.getUTCDay()+6)%7)*dayMs).toISOString().slice(0,10); state.day="all";
-  state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=k; state.open=true;
+  state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=k; state.fres=null; state.open=true;
   applyComp(); setStamp(LIVE); renderAll();
   if(matchMedia("(max-width:720px)").matches) setOpen(false);
   const row=[...document.querySelectorAll("#tbl button.trow")].find(x=>x.dataset.k===k);
