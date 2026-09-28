@@ -293,7 +293,7 @@ function finish(r){
 }
 
 // ---------- Quoteringen ----------
-let MANUAL={}, ODB=null;
+let MANUAL=(EMBEDDED.manual && typeof EMBEDDED.manual==="object")? JSON.parse(JSON.stringify(EMBEDDED.manual)) : {}, ODB=null;
 const okOdds=o=>Array.isArray(o)&&o.length===3&&o.every(x=>x>1);
 function oddsFor(key){
   const man=MANUAL[key]||{}, auto=((DATA.odds||{}).bet365||{})[key];
