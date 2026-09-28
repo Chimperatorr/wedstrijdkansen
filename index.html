@@ -703,7 +703,7 @@ function allFixtures(){
     const src = state.comp==="nl" ? (DATA.nl?.fixtures||[]).filter(f=>state.league==="all"||nlGroup(f[1]).startsWith(state.league)) : (DATA.fixtures||[]).filter(f=>R.idx[f[1]]!==undefined && R.idx[f[2]]!==undefined);
     src.forEach(f=>{ const x=f.slice(); x.k=k; x.o=order.indexOf(k); out.push(x); });
     // gespeelde duels van deze speelweek (vanaf maandag) blijven zichtbaar met de uitslag
-    const ws=weekStart(todayISO());
+    const ws=weekStart(new Date(toD(todayISO()).getTime()-dayMs).toISOString().slice(0,10));
     const played = state.comp==="nl" ? (DATA.nl?.matches||[]).filter(m=>state.league==="all"||nlGroup(m[1]).startsWith(state.league)) : (DATA.matches||[]).filter(m=>R.idx[m[1]]!==undefined && R.idx[m[2]]!==undefined);
     played.filter(m=>m[0]>=ws).forEach(m=>{ const x=[m[0],m[1],m[2],""]; x.res=[m[3],m[4]]; x.k=k; x.o=order.indexOf(k); out.push(x); });
   }
@@ -711,10 +711,11 @@ function allFixtures(){
   return out;
 }
 function weekStart(iso){ const d=toD(iso); return new Date(d.getTime()-((d.getUTCDay()+6)%7)*dayMs).toISOString().slice(0,10); }
+function curWeek(W){ const ws=weekStart(todayISO()); return W.find(w=>w.key>=ws)||W[W.length-1]; }
 function tipHit(tip,res){ const o=res[0]>res[1]?"1":res[0]<res[1]?"2":"X"; return tip.includes(o); }
 function weeks(){
   const today=todayISO(), map=new Map();
-  const ws=weekStart(today);
+  const ws=weekStart(new Date(toD(today).getTime()-dayMs).toISOString().slice(0,10));
   const all=allFixtures(), done=new Set(all.filter(f=>f.res).map(f=>f.k+"|"+f[1]+"|"+f[2]));
   all.filter(f=>f[0]>=ws && (f.res || !done.has(f.k+"|"+f[1]+"|"+f[2])))
     .sort((a,b)=>(a[0]+(a[3]||"")).localeCompare(b[0]+(b[3]||"")) || a.o-b.o)
@@ -725,7 +726,7 @@ function weeks(){
 function renderWeek(){
   const W=weeks(), sel=$("weekSel");
   if(!W.length){ $("detailHome").appendChild($("detailWrap")); $("detailWrap").hidden=true; sel.innerHTML='<option>Geen wedstrijden</option>'; $("tabs").innerHTML=""; $("tbl").innerHTML=`<p class="none">${state.sel.length?"Geen komende wedstrijden in de data.":"Geen competitie geselecteerd. Kies er een of meer in het menu Competities."}</p>`; return; }
-  if(!W.find(w=>w.key===state.week)) state.week=W[0].key;
+  if(!W.find(w=>w.key===state.week)) state.week=curWeek(W).key;
   const shortD=s=>toD(s).toLocaleDateString("nl-NL",{day:"numeric",month:"short"});
   sel.innerHTML=W.map((w,i)=>`<option value="${w.key}">${shortD(w.from)}${w.to!==w.from?" – "+shortD(w.to):""} · ${w.fx.length} duels</option>`).join("");
   sel.value=state.week;
@@ -1049,9 +1050,9 @@ function pickDefault(force){
   use(state.fk);
   const known = state.comp==="nl" ? (t=>!!(DATA.nl?.elo||{})[t]) : (t=>R.idx[t]!==undefined);
   if(!force && state.home && known(state.home) && known(state.away)) return;
-  const W=weeks(); const f=W.length? W[0].fx[0] : null;
+  const W=weeks(); const CW=W.length? curWeek(W) : null; const f=CW? (CW.fx.find(x=>!x.res)||CW.fx[0]) : null;
   state.open=false; state.fres=f&&f.res?f.res.join("-"):null;
-  if(f){ state.fk=f.k; use(f.k); state.home=f[1]; state.away=f[2]; state.date=f[0]; state.fixture=f.k+"#"+f.slice(0,3).join("|"); state.week=W[0].key; state.day="all"; }
+  if(f){ state.fk=f.k; use(f.k); state.home=f[1]; state.away=f[2]; state.date=f[0]; state.fixture=f.k+"#"+f.slice(0,3).join("|"); state.week=CW.key; state.day="all"; }
   else { const k=state.sel.find(x=>!x.startsWith("nl:")&&!CMAP[x]?.na)||"ere"; state.fk=k; use(k); state.home=R.T[0]; state.away=R.T[1]; state.date=null; state.fixture=null; }
 }
 function applyComp(){
