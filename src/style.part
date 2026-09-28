@@ -308,3 +308,9 @@ button.trow:hover{background:rgba(255,255,255,.04)}
 .trow .cmp{font-size:.66rem;letter-spacing:.8px;color:var(--secondary);text-transform:uppercase}
 .tcomp{font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--secondary);padding:10px 12px 2px}
 @media (max-width:720px){ .ms{width:100%} .msel summary{max-width:none} .mslist{left:0;right:auto;width:100%} }
+/* detail onder de aangeklikte wedstrijd */
+.dwrap{display:flex;flex-direction:column;gap:16px;background:var(--bg);border-left:3px solid var(--primary);border-radius:0 0 4px 4px;padding:16px 12px 20px;margin:0 0 12px}
+.dwrap[hidden]{display:none}
+.dwrap .panel,.dwrap .board,.dwrap .result{box-shadow:none}
+.dwrap .ctx,.dwrap .grid2{margin:0}
+@media (max-width:720px){ .dwrap{padding:12px 8px 16px;margin:0 -8px 12px} }

@@ -310,6 +310,12 @@ button.trow:hover{background:rgba(255,255,255,.04)}
 .trow .cmp{font-size:.66rem;letter-spacing:.8px;color:var(--secondary);text-transform:uppercase}
 .tcomp{font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--secondary);padding:10px 12px 2px}
 @media (max-width:720px){ .ms{width:100%} .msel summary{max-width:none} .mslist{left:0;right:auto;width:100%} }
+/* detail onder de aangeklikte wedstrijd */
+.dwrap{display:flex;flex-direction:column;gap:16px;background:var(--bg);border-left:3px solid var(--primary);border-radius:0 0 4px 4px;padding:16px 12px 20px;margin:0 0 12px}
+.dwrap[hidden]{display:none}
+.dwrap .panel,.dwrap .board,.dwrap .result{box-shadow:none}
+.dwrap .ctx,.dwrap .grid2{margin:0}
+@media (max-width:720px){ .dwrap{padding:12px 8px 16px;margin:0 -8px 12px} }
 </style></head><body>
 
 <header class="appbar"><div class="in">
@@ -335,6 +341,7 @@ button.trow:hover{background:rgba(255,255,255,.04)}
     <p class="note">Tip: 1, X, 2, of dubbele kans (1X / X2) als niets boven 50% komt. Goals: +2,5 = meer dan 2,5 goals, −2,5 = minder. Tik op een wedstrijd voor de volledige analyse.</p>
   </section>
 
+  <div id="detailWrap" class="dwrap">
   <section class="board" id="detail" aria-label="Wedstrijd">
     <div class="side home">
       <span class="label">Thuis</span>
@@ -410,6 +417,9 @@ button.trow:hover{background:rgba(255,255,255,.04)}
     <div class="otbl" id="otbl"></div>
     <p class="note" id="oddsNote"></p>
   </section>
+
+  </div>
+  <div id="detailHome"></div>
 
   <details class="settings" id="settings">
     <summary>Modelinstellingen</summary>
@@ -18547,7 +18557,7 @@ const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
 const cName = k => CMAP[k]?.n || k, cFull = k => CMAP[k]? CMAP[k].c+" · "+CMAP[k].n : k;
 let RC = {};   // ratings per competitie
 const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0.5};
-const state = {more:{}, sel:["ere"], fk:"ere", comp:"ere", league:"all", home:null, away:null, date:null, fixture:null, week:null, day:"all", ...DEF, adj:{}, off:{}};
+const state = {more:{}, open:false, sel:["ere"], fk:"ere", comp:"ere", league:"all", home:null, away:null, date:null, fixture:null, week:null, day:"all", ...DEF, adj:{}, off:{}};
 const MAXG = 10, IMP=[0,0.015,0.03,0.06], PROMO={att:0.80,def:1.22};
 const $ = id => document.getElementById(id);
 const fmtP = p => (p*100).toFixed(1).replace(".",",") + "%";
@@ -18792,10 +18802,16 @@ function renderWeek(){
     });
   });
   use(state.fk);
+  const dw=$("detailWrap"); $("detailHome").appendChild(dw);
   $("tbl").innerHTML=html;
+  const selRow = state.open!==false ? [...$("tbl").querySelectorAll("button.trow")].find(b=>b.dataset.k===state.fixture) : null;
+  if(selRow){ selRow.after(dw); dw.hidden=false; } else dw.hidden=true;
   $("tbl").querySelectorAll("button.trow").forEach(b=>b.addEventListener("click",()=>{
-    const [c,rest]=b.dataset.k.split("#"), [d,h,a]=rest.split("|"); state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=b.dataset.k; applyComp(); setStamp(LIVE); renderAll();
-    $("detail").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+    if(state.fixture===b.dataset.k && state.open!==false){ state.open=false; renderWeek(); return; }
+    const [c,rest]=b.dataset.k.split("#"), [d,h,a]=rest.split("|"); state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=b.dataset.k; state.open=true; applyComp(); setStamp(LIVE); renderAll();
+    const row=[...$("tbl").querySelectorAll("button.trow")].find(x=>x.dataset.k===state.fixture);
+    if(row){ const bar=document.querySelector(".appbar"), off=(bar&&getComputedStyle(bar).position!=="static"?bar.offsetHeight:0)+8;
+      window.scrollTo({top:row.getBoundingClientRect().top+scrollY-off,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}); }
   }));
 }
 
