@@ -20,11 +20,11 @@ META = {
   "it1": {"name": "Serie A", "country": "Italië", "of": "it.1", "tz": 0, "up": None, "down": "it.2"},
   "es1": {"name": "La Liga", "country": "Spanje", "of": "es.1", "tz": 0, "up": None, "down": "es.2"},
   "de1": {"name": "Bundesliga", "country": "Duitsland", "of": "de.1", "tz": 0, "up": None, "down": "de.2"},
-  "de2": {"name": "2. Bundesliga", "country": "Duitsland", "openliga": True, "prevof": "de.2", "tz": 0, "up": "de.1", "down": None},
+  "de2": {"name": "2. Bundesliga", "country": "Duitsland", "openliga": True, "prevof": "de.2", "tz": 0, "up": "de.1", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
   "fr1": {"name": "Ligue 1", "country": "Frankrijk", "of": "fr.1", "tz": 0, "up": None, "down": "fr.2"},
-  "pt1": {"name": "Liga Portugal", "country": "Portugal", "of": "pt.1", "tz": 1, "up": None, "down": None},
-  "nl2": {"name": "Keuken Kampioen Divisie", "country": "Nederland", "fc": "nl.2", "tz": 0, "up": "ere", "down": None},
-  "be1": {"name": "Pro League", "country": "België", "fc": "be.1", "prevof": "be.1", "tz": 0, "up": None, "down": None},
+  "pt1": {"name": "Liga Portugal", "country": "Portugal", "of": "pt.1", "tz": 1, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
+  "nl2": {"name": "Keuken Kampioen Divisie", "country": "Nederland", "fc": "nl.2", "tz": 0, "up": "ere", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
+  "be1": {"name": "Pro League", "country": "België", "fc": "be.1", "prevof": "be.1", "tz": 0, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
 }
 
 NAMES = {
@@ -156,6 +156,9 @@ def norm(s):
     s = s.replace("man utd", "manchester united").replace("man city", "manchester city").replace("nottm", "nottingham")
     s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach")
     s = s.replace("sheff utd", "sheffield united").replace("sheff wed", "sheffield wednesday").replace("wolverhampton", "wolves")
+    s = s.replace("maastricht", "mvv").replace("venlo", "vvv").replace("bruges", "brugge").replace("st. truidense", "sint truiden").replace("st truidense", "sint truiden")
+    s = s.replace("standard liege", "standard luik").replace("union saint-gilloise", "union sg").replace("oud-heverlee leuven", "oh leuven").replace("royal antwerp", "antwerp")
+    s = s.replace("sporting lisbon", "sporting cp").replace("benfica lisbon", "benfica").replace("vitoria sc guimaraes", "vitoria guimaraes").replace("hertha bsc berlin", "hertha")
     s = s.replace("psg", "paris sg").replace("paris saint-germain", "paris sg").replace("a coruna", "la coruna")
     s = re.sub(r"\b(fc|afc|cf|sc|ac|as|club|de|calcio|tsg|vfl|vfb|sv|1\.|the)\b", " ", s)
     return re.sub(r"[^a-z ]", " ", s).split()
@@ -202,13 +205,15 @@ def b365_load(code, fixtures):
         d = pdate(p[0])
         if not d: continue
         dd = datetime.date.fromisoformat(d)
-        near = {(dd + datetime.timedelta(days=k)).isoformat() for k in (-1, 0, 1)}
+        near = {(dd + datetime.timedelta(days=k)).isoformat() for k in (-3, -2, -1, 0, 1, 2, 3)}
         best, bs = None, 0
         for f in fixtures:
             if f[0] not in near: continue
             s = sim(p[1], f[1]) + sim(p[2], f[2])
             if s > bs: best, bs = f, s
         if best and bs >= 1.4:
+            if abs((datetime.date.fromisoformat(best[0]) - dd).days) > 1:
+                best[0] = d; best[3] = ""   # bron had een voorlopige datum: neem de datum van de bookmaker over
             out[f"{best[0]}|{best[1]}|{best[2]}"] = o
         else:
             print("  geen match voor bet365:", line.strip(), file=sys.stderr)
@@ -292,6 +297,7 @@ def main():
         fx = [f for f in fx if f[0] >= TODAY]
         fx.sort(key=lambda f: (f[0], f[3]))
         odds = b365_load(code, fx)
+        fx.sort(key=lambda f: (f[0], f[3]))
         if not odds and old is not None:   # geen nieuwe quoteringen: oude houden voor nog te spelen duels
             keep = {f"{f[0]}|{f[1]}|{f[2]}" for f in fx}
             odds = {k: v for k, v in (old.get("odds", {}).get("bet365") or {}).items() if k in keep}
@@ -300,7 +306,7 @@ def main():
             "season": "2026/27", "teams": teams, "prev": prev, "rel": rel, "noPrev": not prevm,
             "matches": sorted(played), "prevMatches": sorted(prevm or []), "fixtures": fx,
             "absences": [], "noAbs": True,
-            "odds": {"bet365": odds, "updated": TODAY if odds else None, "source": "bet365.nl"},
+            "odds": {"bet365": odds, "updated": TODAY if odds else None, "source": M.get("osrc", "bet365"), "label": M.get("olabel", "bet365")},
             "source": ("openfootball (github.com/openfootball)" if M.get("of") else
                         "openfootball/openligadb" if M.get("openliga") else "fcupdate.nl"),
         }

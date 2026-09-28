@@ -299,7 +299,10 @@ function oddsFor(key){
   const man=MANUAL[key]||{}, auto=((DATA.odds||{}).bet365||{})[key];
   return {o711: okOdds(man["711"])?man["711"]:null, o365: okOdds(man.bet365)?man.bet365:(okOdds(auto)?auto:null), auto365: !okOdds(man.bet365)&&okOdds(auto)};
 }
-function marketFor(key){ const o=oddsFor(key); if(o.o365) return {src:"bet365",o:o.o365}; return null; }
+const OLAB=()=> (DATA.odds&&DATA.odds.label)||"bet365";
+const OTAG=()=> OLAB()==="bet365"?"b365":"markt";
+const ONAME=()=> OLAB()==="bet365"?"bet365":"beste marktprijs";
+function marketFor(key){ const o=oddsFor(key); if(o.o365) return {src:o.auto365?ONAME():"quoteringen",o:o.o365}; return null; }
 function implied(o){ const inv=o.map(x=>1/x), s=inv.reduce((a,b)=>a+b,0); return {q:inv.map(x=>x/s), margin:s-1}; }
 function applyMarket(r,key){
   r.model={ph:r.ph,pd:r.pd,pa:r.pa}; r.key=key;
@@ -391,7 +394,7 @@ function renderWeek(){
         <span class="c num sc">${s.sc.i}-${s.sc.j}</span>
         <span class="c num g" title="${esc(s.g)} (${pc(s.gP)}%)">${s.gShort}</span>
         <span class="c bt ${s.bt==="Ja"?"y":s.bt==="Nee"?"n":""}" title="Beide teams scoren ${pc(r.btts)}%">${s.bt}</span>
-        <span class="c od num">${mk?`<span class="src">b365</span>${mk.o.map((x,k)=>`<span class="${s.best===["1","X","2"][k]?"b":""}">${x.toFixed(2)}</span>`).join("")}`:'<span class="none">–</span>'}</span>
+        <span class="c od num">${mk?`<span class="src" title="${esc(ONAME())}">${OTAG()}</span>${mk.o.map((x,k)=>`<span class="${s.best===["1","X","2"][k]?"b":""}">${x.toFixed(2)}</span>`).join("")}`:'<span class="none">–</span>'}</span>
       </button>`;
     });
   });
@@ -467,7 +470,7 @@ function render(){
   else if(gap<0.07) v=`Een open wedstrijd. ${hn} en ${an} ontlopen elkaar weinig; een gelijkspel zit er met ${fmtP(r.pd)} goed in.`;
   else if(fav[1]>0.6) v=`${fav[0]} is duidelijk favoriet met ${fmtP(fav[1])} winkans.`;
   else v=`${fav[0]} is licht favoriet met ${fmtP(fav[1])} winkans.`;
-  $("verdict").textContent=v+when+(r.blended?` Inclusief ${r.market.src}-quoteringen (model alleen: ${fmtP(r.model.ph)} / ${fmtP(r.model.pd)} / ${fmtP(r.model.pa)}).`:"");
+  $("verdict").textContent=v+when+(r.blended?` Inclusief ${r.market.src==="bet365"?"bet365-quoteringen":"quoteringen ("+r.market.src+")"} (model alleen: ${fmtP(r.model.ph)} / ${fmtP(r.model.pd)} / ${fmtP(r.model.pa)}).`:"");
 
   advice(r);
   renderH2H(r);
@@ -642,11 +645,11 @@ function renderOdds(r){
       ${ev!==null?`<small class="${ev>0.03?"pos":"neg"}">${ev>=0?"+":""}${(ev*100).toFixed(0)}%</small>`:"<small class='neg'>&nbsp;</small>"}</span>`;
   };
   const mg=()=>{ const x=o.o365; return x? (implied(x).margin*100).toFixed(1).replace(".",",")+"%":"–"; };
-  $("otbl").innerHTML=`<div class="orow ohead"><span></span><span class="c">Model</span><span class="c">Eindkans</span><span class="c">Faire odds</span><span class="c">bet365</span></div>`+
+  $("otbl").innerHTML=`<div class="orow ohead"><span></span><span class="c">Model</span><span class="c">Eindkans</span><span class="c">Faire odds</span><span class="c">${esc(OLAB()==="bet365"?"bet365":"Beste prijs")}</span></div>`+
     [0,1,2].map(k=>`<div class="orow"><span class="ol">${esc(lab[k])}</span><span class="c num">${fmtP(mod[k])}</span><span class="c num b">${fmtP(fin[k])}</span><span class="c num">${fmt2(1/fin[k])}</span>${cell("bet365",o.o365,k,o.auto365)}</div>`).join("")+
     `<div class="orow ofoot"><span class="ol">Marge bookmaker</span><span></span><span></span><span></span><span class="c num">${mg()}</span></div>`;
   const used = r.market? `Eindkans = ${Math.round((1-state.mw)*100)}% model + ${Math.round(state.mw*100)}% ${r.market.src} (zonder marge).` : "Nog geen quoteringen voor deze wedstrijd: eindkans = model.";
-  $("oddsNote").textContent = `${used} Het percentage onder een quotering is de verwachte waarde: positief betekent dat de eindkans hoger is dan de quotering suggereert. ${o.auto365?"bet365 automatisch opgehaald ("+nlDate((DATA.odds||{}).updated||todayISO())+"); ":""}je kunt de quoteringen zelf aanpassen als ze veranderd zijn.`;
+  $("oddsNote").textContent = `${used} Het percentage onder een quotering is de verwachte waarde: positief betekent dat de eindkans hoger is dan de quotering suggereert. ${o.auto365?(OLAB()==="bet365"?"bet365":"Hoogste prijs over meerdere bookmakers ("+((DATA.odds||{}).source||"")+")")+" automatisch opgehaald ("+nlDate((DATA.odds||{}).updated||todayISO())+"); ":""}je kunt de quoteringen zelf aanpassen als ze veranderd zijn.`;
   $("otbl").querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
     const src=inp.dataset.src, vals=[...$("otbl").querySelectorAll(`input[data-src="${src}"]`)].map(x=>parseFloat(String(x.value).replace(",",".")));
     const cur={...(MANUAL[key]||{})};

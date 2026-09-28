@@ -65,7 +65,7 @@ function local(qRaw){
     const x=TP.find(y=>teams.includes(y.h)||teams.includes(y.a));
     const r=x.r, s=x.s, ev=x.o?[r.ph,r.pd,r.pa].map((p,k)=>p*x.o[k]-1):null;
     const lab=["1 · "+x.h,"X · gelijk","2 · "+x.a];
-    let bestV=""; if(ev){ const k=ev.indexOf(Math.max(...ev)); bestV=`<p>Beste waarde volgens bet365: <b>${esc(lab[k])}</b> @${od(x.o[k])} (verwachte waarde ${ev[k]>=0?"+":""}${Math.round(ev[k]*100)}%).</p>`; }
+    let bestV=""; if(ev){ const k=ev.indexOf(Math.max(...ev)); bestV=`<p>Beste waarde volgens de quoteringen: <b>${esc(lab[k])}</b> @${od(x.o[k])} (verwachte waarde ${ev[k]>=0?"+":""}${Math.round(ev[k]*100)}%).</p>`; }
     return `<p><b>${esc(x.h)} – ${esc(x.a)}</b>, ${esc(shortD(x.d))} ${esc(x.t)}</p><p>1 ${pc(r.ph)} · X ${pc(r.pd)} · 2 ${pc(r.pa)}. Tip <b>${s.tip}</b>, voorspelde uitslag <b>${s.sc.i}-${s.sc.j}</b>, goals ${esc(s.g.toLowerCase())} (${pc(s.gP)}), BTTS ${s.bt} (${pc(r.btts)}).</p>${bestV}${fmtItem(x,"Open analyse",Math.max(r.ph,r.pd,r.pa),null,"")}`;
   }
   let type=null;
@@ -81,13 +81,13 @@ function local(qRaw){
   let rows=[], head="";
   if(type==="value"){
     const all=[]; P.forEach(x=>{ if(!x.o) return; const pr=[x.r.ph,x.r.pd,x.r.pa]; pr.forEach((p,k)=>{ if(p<0.2) return; all.push({x,k,p,odd:x.o[k],ev:p*x.o[k]-1}); }); });
-    if(!all.length) return `Voor ${esc(where)} zijn er geen bet365-quoteringen. Quoteringen zijn er voor Eredivisie, Premier League, Championship, Bundesliga, La Liga, Serie A, Ligue 1 en Nations League. Vraag bijvoorbeeld "top 5 zekerste" voor een lijst op basis van kansen.`;
+    if(!all.length) return `Voor ${esc(where)} zijn er geen bet365-quoteringen. Quoteringen zijn er voor alle competities behalve (soms) de Nations League-duels van vandaag. Vraag bijvoorbeeld "top 5 zekerste" voor een lijst op basis van kansen.`;
     all.sort((a,b)=>b.ev-a.ev);
     const pos=all.filter(v=>v.ev>0);
     const list=(pos.length?pos:all).slice(0,N);
     head = pos.length? `Beste ${list.length===1?"bet":list.length+" bets"} op basis van kans × quotering (${esc(where)}):` : `Geen positieve verwachte waarde gevonden (${esc(where)}). Dit komen het dichtst bij:`;
     rows=list.map(v=>fmtItem(v.x, v.k===0?v.x.h+" wint":v.k===2?v.x.a+" wint":"Gelijkspel", v.p, v.odd, `EV ${v.ev>=0?"+":""}${Math.round(v.ev*100)}%`));
-    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans is een mix van model en bet365 (instelbaar onder Modelinstellingen). Geen garantie, speel verantwoord.</p>`;
+    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans is een mix van model en quoteringen (instelbaar onder Modelinstellingen). Bij KKD, 2. Bundesliga, Liga Portugal en Pro League is de quotering de hoogste prijs over meerdere bookmakers. Geen garantie, speel verantwoord.</p>`;
   }
   const m={
     sure:{sort:x=>Math.max(x.r.ph,x.r.pd,x.r.pa), pick:x=>{const k=[x.r.ph,x.r.pd,x.r.pa]; const i=k.indexOf(Math.max(...k)); return i===0?x.h+" wint":i===2?x.a+" wint":"Gelijkspel";}, odd:x=>{if(!x.o)return null;const k=[x.r.ph,x.r.pd,x.r.pa];return x.o[k.indexOf(Math.max(...k))];}, h:"Zekerste uitkomsten"},
@@ -104,10 +104,10 @@ function local(qRaw){
 function context(){
   const today=todayISO(), P=pool(COMPS.map(c=>c.k), today, addDays(today,13));
   const lines=P.slice(0,220).map(x=>{ const r=x.r; const ev=x.o?[r.ph,r.pd,r.pa].map((p,k)=>Math.round((p*x.o[k]-1)*100)):null;
-    return `${x.d} ${x.t}|${cName(x.k)}|${x.h} - ${x.a}|1 ${pc(r.ph)} X ${pc(r.pd)} 2 ${pc(r.pa)}|tip ${x.s.tip}|uitslag ${x.s.sc.i}-${x.s.sc.j}|o2.5 ${pc(r.o25)}|btts ${pc(r.btts)}|xG ${fmt2(r.lh)}-${fmt2(r.la)}${x.o?`|bet365 ${x.o.map(od).join("/")}|EV% ${ev.join("/")}`:""}`; });
+    return `${x.d} ${x.t}|${cName(x.k)}|${x.h} - ${x.a}|1 ${pc(r.ph)} X ${pc(r.pd)} 2 ${pc(r.pa)}|tip ${x.s.tip}|uitslag ${x.s.sc.i}-${x.s.sc.j}|o2.5 ${pc(r.o25)}|btts ${pc(r.btts)}|xG ${fmt2(r.lh)}-${fmt2(r.la)}${x.o?`|quotering ${x.o.map(od).join("/")}|EV% ${ev.join("/")}`:""}`; });
   return `Je bent de wedstrijdassistent op een Nederlandse voorspellingspagina (Scorito). Vandaag is ${today}. Geselecteerde competities: ${state.sel.map(cFull).join(", ")||"geen"}.
-Antwoord in het Nederlands, kort en concreet. Gebruik UITSLUITEND de data hieronder (kansen van het model, gemengd met bet365 waar quoteringen zijn). "Beste bet" = hoogste verwachte waarde (EV = kans × quotering − 1) met redelijke kans (≥25%). Lijstjes als regels die beginnen met "- ", met datum, wedstrijd, keuze, kans en quotering. Geen tabellen, geen koppen. Verzin geen wedstrijden of quoteringen. Sluit bij bet-advies af met één korte regel dat het geen garantie is.
-Formaat per regel: datum tijd|competitie|thuis - uit|kansen|tip|voorspelde uitslag|kans >2,5 goals|kans beide scoren|verwachte goals|bet365 1/X/2|EV% 1/X/2
+Antwoord in het Nederlands, kort en concreet. Gebruik UITSLUITEND de data hieronder (kansen van het model, gemengd met bookmakerquoteringen waar die er zijn). "Beste bet" = hoogste verwachte waarde (EV = kans × quotering − 1) met redelijke kans (≥25%). Lijstjes als regels die beginnen met "- ", met datum, wedstrijd, keuze, kans en quotering. Geen tabellen, geen koppen. Verzin geen wedstrijden of quoteringen. Sluit bij bet-advies af met één korte regel dat het geen garantie is.
+Formaat per regel: datum tijd|competitie|thuis - uit|kansen|tip|voorspelde uitslag|kans >2,5 goals|kans beide scoren|verwachte goals|quotering 1/X/2|EV% 1/X/2
 ${lines.join("\n")}`;
 }
 function md(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").split(/\n/).map(l=>/^\s*[-•]\s+/.test(l)?`<li>${l.replace(/^\s*[-•]\s+/,"")}</li>`:(l.trim()?`<p>${l}</p>`:"")).join("").replace(/(<li>.*?<\/li>)+/g,m=>`<ul>${m}</ul>`); }
