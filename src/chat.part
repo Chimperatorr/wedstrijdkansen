@@ -81,7 +81,7 @@ function local(qRaw){
   let rows=[], head="";
   if(type==="value"){
     const all=[]; P.forEach(x=>{ if(!x.o) return; const pr=[x.r.ph,x.r.pd,x.r.pa]; pr.forEach((p,k)=>{ if(p<0.2) return; all.push({x,k,p,odd:x.o[k],ev:p*x.o[k]-1}); }); });
-    if(!all.length) return `Voor ${esc(where)} zijn er geen bet365-quoteringen. Quoteringen zijn er voor Eredivisie, Premier League, Bundesliga, La Liga en Serie A. Vraag bijvoorbeeld "top 5 zekerste" voor een lijst op basis van kansen.`;
+    if(!all.length) return `Voor ${esc(where)} zijn er geen bet365-quoteringen. Quoteringen zijn er voor Eredivisie, Premier League, Championship, Bundesliga, La Liga, Serie A, Ligue 1 en Nations League. Vraag bijvoorbeeld "top 5 zekerste" voor een lijst op basis van kansen.`;
     all.sort((a,b)=>b.ev-a.ev);
     const pos=all.filter(v=>v.ev>0);
     const list=(pos.length?pos:all).slice(0,N);

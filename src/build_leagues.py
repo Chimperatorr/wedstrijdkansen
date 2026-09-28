@@ -10,6 +10,7 @@ _ap = argparse.ArgumentParser()
 _ap.add_argument("openliga", nargs="?", help="pad naar openliga 2026-27_de.2.txt")
 _ap.add_argument("--update", help="map met bestaande league-docs (<code>.json); historie wordt daaruit overgenomen")
 _ap.add_argument("--out", default=None, help="map om per competitie <code>.json te schrijven")
+_ap.add_argument("--nl-main", default=None, help="pad naar model/current-JSON: zet b365/nl.txt (Nations League, bet365.com) in odds.bet365 en stop")
 ARGS = _ap.parse_args()
 OPENLIGA = ARGS.openliga
 
@@ -57,7 +58,7 @@ NAMES = {
   "AS Monaco FC": "Monaco", "Angers SCO": "Angers", "ES Troyes AC": "Troyes", "Le Havre AC": "Le Havre", "Lille OSC": "Lille",
   "OGC Nice": "Nice", "Olympique Lyonnais": "Lyon", "Olympique de Marseille": "Marseille", "Paris Saint-Germain FC": "Paris SG",
   "RC Strasbourg Alsace": "Strasbourg", "Racing Club de Lens": "Lens", "Stade Brestois 29": "Brest", "Stade Rennais FC 1901": "Rennes",
-  "AJ Auxerre": "Auxerre",
+  "AJ Auxerre": "Auxerre", "Paris FC": "Paris FC",
   # Portugal
   "Sport Lisboa e Benfica": "Benfica", "Sporting Clube de Portugal": "Sporting CP", "Sporting Clube de Braga": "Braga",
   "GD Estoril Praia": "Estoril", "Casa Pia AC": "Casa Pia", "CD Santa Clara": "Santa Clara", "CD Nacional": "Nacional",
@@ -154,6 +155,7 @@ def norm(s):
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
     s = s.replace("man utd", "manchester united").replace("man city", "manchester city").replace("nottm", "nottingham")
     s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach")
+    s = s.replace("sheff utd", "sheffield united").replace("sheff wed", "sheffield wednesday").replace("wolverhampton", "wolves")
     s = s.replace("psg", "paris sg").replace("paris saint-germain", "paris sg").replace("a coruna", "la coruna")
     s = re.sub(r"\b(fc|afc|cf|sc|ac|as|club|de|calcio|tsg|vfl|vfb|sv|1\.|the)\b", " ", s)
     return re.sub(r"[^a-z ]", " ", s).split()
@@ -166,6 +168,28 @@ def sim(a, b):
     if set(A.split()) & set(B.split()): r = max(r, 0.75)
     return r
 
+def price(x):
+    """Decimale (1.85) of Engelse fractionele (11/10, EVS) notatie naar decimaal."""
+    x = x.strip().upper()
+    if x in ("EVS", "EVENS"): return 2.0
+    try:
+        if "/" in x:
+            a, b = x.split("/"); v = 1 + float(a) / float(b)
+        else: v = float(x.replace(",", "."))
+    except (ValueError, ZeroDivisionError): return None
+    return round(v, 3) if v > 1 else None
+
+def pdate(s):
+    """'YYYY-MM-DD ...' of 'DD/MM/YY ...' (bet365.com) naar YYYY-MM-DD."""
+    s = s.strip()
+    m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", s)
+    if m: return m.group(0)
+    m = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{2,4})", s)
+    if m:
+        y = int(m.group(3)); y = y + 2000 if y < 100 else y
+        return f"{y:04d}-{int(m.group(2)):02d}-{int(m.group(1)):02d}"
+    return None
+
 def b365_load(code, fixtures):
     path = f"{HERE}/b365/{code}.txt"
     out = {}
@@ -173,9 +197,10 @@ def b365_load(code, fixtures):
     for line in open(path, encoding="utf-8"):
         p = [x.strip() for x in line.split("|")]
         if len(p) != 6: continue
-        try: o = [float(x) for x in p[3:6]]
-        except ValueError: continue
-        d = p[0][:10]
+        o = [price(x) for x in p[3:6]]
+        if None in o: continue
+        d = pdate(p[0])
+        if not d: continue
         dd = datetime.date.fromisoformat(d)
         near = {(dd + datetime.timedelta(days=k)).isoformat() for k in (-1, 0, 1)}
         best, bs = None, 0
@@ -189,7 +214,41 @@ def b365_load(code, fixtures):
             print("  geen match voor bet365:", line.strip(), file=sys.stderr)
     return out
 
+EN = {"Spain":"Spanje","England":"Engeland","France":"Frankrijk","Portugal":"Portugal","Belgium":"België","Netherlands":"Nederland","Holland":"Nederland",
+ "Switzerland":"Zwitserland","Norway":"Noorwegen","Croatia":"Kroatië","Germany":"Duitsland","Denmark":"Denemarken","Austria":"Oostenrijk","Turkey":"Turkije","Turkiye":"Turkije",
+ "Italy":"Italië","Ukraine":"Oekraïne","Greece":"Griekenland","Scotland":"Schotland","Sweden":"Zweden","Rep of Ireland":"Ierland","Republic of Ireland":"Ierland","Ireland":"Ierland",
+ "Kosovo":"Kosovo","Poland":"Polen","Serbia":"Servië","Hungary":"Hongarije","Slovenia":"Slovenië","Wales":"Wales","Czechia":"Tsjechië","Czech Republic":"Tsjechië",
+ "Northern Ireland":"Noord-Ierland","Romania":"Roemenië","Georgia":"Georgië","Bosnia-Herzegovina":"Bosnië en Herzegovina","Bosnia and Herzegovina":"Bosnië en Herzegovina","Bosnia":"Bosnië en Herzegovina",
+ "Israel":"Israël","North Macedonia":"Noord-Macedonië","Slovakia":"Slowakije","Albania":"Albanië","Iceland":"IJsland","Finland":"Finland","Belarus":"Wit-Rusland",
+ "Luxembourg":"Luxemburg","Montenegro":"Montenegro","Bulgaria":"Bulgarije","Kazakhstan":"Kazachstan","Armenia":"Armenië","Faroe Islands":"Faeröer","Estonia":"Estland",
+ "Azerbaijan":"Azerbeidzjan","Cyprus":"Cyprus","Lithuania":"Litouwen","Latvia":"Letland","Malta":"Malta","Moldova":"Moldavië","Andorra":"Andorra","Gibraltar":"Gibraltar",
+ "Liechtenstein":"Liechtenstein","San Marino":"San Marino"}
+
+def nl_odds(path):
+    D = json.load(open(path, encoding="utf-8"))
+    fx = D["nl"]["fixtures"]
+    odds = D.setdefault("odds", {}).setdefault("bet365", {})
+    n = miss = 0
+    src = f"{HERE}/b365/nl.txt"
+    if not os.path.exists(src): print("geen b365/nl.txt"); return
+    for line in open(src, encoding="utf-8"):
+        p = [x.strip() for x in line.split("|")]
+        if len(p) != 6: continue
+        d = pdate(p[0]); o = [price(x) for x in p[3:6]]
+        h, a = EN.get(p[1]), EN.get(p[2])
+        if not d or None in o or not h or not a: print("  overgeslagen (naam/prijs onbekend):", line.strip(), file=sys.stderr); miss += 1; continue
+        dd = datetime.date.fromisoformat(d); near = {(dd + datetime.timedelta(days=k)).isoformat() for k in (-1, 0, 1)}
+        f = next((f for f in fx if f[0] in near and f[1] == h and f[2] == a), None)
+        if not f: print("  geen fixture:", d, h, a, file=sys.stderr); miss += 1; continue
+        odds[f"{f[0]}|{f[1]}|{f[2]}"] = o; n += 1
+    today = datetime.date.today().isoformat()
+    D["odds"]["bet365"] = {k: v for k, v in odds.items() if k[:10] >= today}
+    json.dump(D, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("Nations League-quoteringen:", n, "gezet,", miss, "overgeslagen")
+
 def main():
+    if ARGS.nl_main:
+        nl_odds(ARGS.nl_main); return
     prev_sets = {}
     for c in ("en.1", "en.2", "de.1", "de.2", "es.1", "es.2", "it.1", "it.2", "fr.1", "fr.2", "pt.1", "be.1"):
         pl = of_prev(c)
