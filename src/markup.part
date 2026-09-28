@@ -151,7 +151,7 @@ const COMPS = [
 const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
 const cName = k => CMAP[k]?.n || k, cFull = k => CMAP[k]? CMAP[k].c+" · "+CMAP[k].n : k;
 let RC = {};   // ratings per competitie
-const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0.5};
+const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0};
 const state = {more:{}, open:false, sel:["ere"], fk:"ere", comp:"ere", league:"all", home:null, away:null, date:null, fixture:null, week:null, day:"all", ...DEF, adj:{}, off:{}};
 const MAXG = 10, IMP=[0,0.015,0.03,0.06], PROMO={att:0.80,def:1.22};
 const $ = id => document.getElementById(id);
@@ -649,7 +649,7 @@ function renderOdds(r){
   $("otbl").innerHTML=`<div class="orow ohead"><span></span><span class="c">Model</span><span class="c">Eindkans</span><span class="c">Faire odds</span><span class="c">${esc(OLAB()==="bet365"?"bet365":"Beste prijs")}</span></div>`+
     [0,1,2].map(k=>`<div class="orow"><span class="ol">${esc(lab[k])}</span><span class="c num">${fmtP(mod[k])}</span><span class="c num b">${fmtP(fin[k])}</span><span class="c num">${fmt2(1/fin[k])}</span>${cell("bet365",o.o365,k,o.auto365)}</div>`).join("")+
     `<div class="orow ofoot"><span class="ol">Marge bookmaker</span><span></span><span></span><span></span><span class="c num">${mg()}</span></div>`;
-  const used = r.market? `Eindkans = ${Math.round((1-state.mw)*100)}% model + ${Math.round(state.mw*100)}% ${r.market.src} (zonder marge).` : "Nog geen quoteringen voor deze wedstrijd: eindkans = model.";
+  const used = r.market && !(state.mw>0) ? "Eindkans = alleen het model; de quoteringen tellen niet mee in de kans en dienen alleen om de verwachte waarde te berekenen." : r.market? `Eindkans = ${Math.round((1-state.mw)*100)}% model + ${Math.round(state.mw*100)}% ${r.market.src} (zonder marge).` : "Nog geen quoteringen voor deze wedstrijd: eindkans = model.";
   $("oddsNote").textContent = `${used} Het percentage onder een quotering is de verwachte waarde: positief betekent dat de eindkans hoger is dan de quotering suggereert. ${o.auto365?(OLAB()==="bet365"?"bet365":"Hoogste prijs over meerdere bookmakers ("+((DATA.odds||{}).source||"")+")")+" automatisch opgehaald ("+nlDate((DATA.odds||{}).updated||todayISO())+"); ":""}je kunt de quoteringen zelf aanpassen als ze veranderd zijn.`;
   $("otbl").querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
     const src=inp.dataset.src, vals=[...$("otbl").querySelectorAll(`input[data-src="${src}"]`)].map(x=>parseFloat(String(x.value).replace(",",".")));

@@ -502,7 +502,7 @@ const COMPS = [
 const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
 const cName = k => CMAP[k]?.n || k, cFull = k => CMAP[k]? CMAP[k].c+" · "+CMAP[k].n : k;
 let RC = {};   // ratings per competitie
-const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0.5};
+const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0};
 const state = {more:{}, open:false, sel:["ere"], fk:"ere", comp:"ere", league:"all", home:null, away:null, date:null, fixture:null, week:null, day:"all", ...DEF, adj:{}, off:{}};
 const MAXG = 10, IMP=[0,0.015,0.03,0.06], PROMO={att:0.80,def:1.22};
 const $ = id => document.getElementById(id);
@@ -1000,7 +1000,7 @@ function renderOdds(r){
   $("otbl").innerHTML=`<div class="orow ohead"><span></span><span class="c">Model</span><span class="c">Eindkans</span><span class="c">Faire odds</span><span class="c">${esc(OLAB()==="bet365"?"bet365":"Beste prijs")}</span></div>`+
     [0,1,2].map(k=>`<div class="orow"><span class="ol">${esc(lab[k])}</span><span class="c num">${fmtP(mod[k])}</span><span class="c num b">${fmtP(fin[k])}</span><span class="c num">${fmt2(1/fin[k])}</span>${cell("bet365",o.o365,k,o.auto365)}</div>`).join("")+
     `<div class="orow ofoot"><span class="ol">Marge bookmaker</span><span></span><span></span><span></span><span class="c num">${mg()}</span></div>`;
-  const used = r.market? `Eindkans = ${Math.round((1-state.mw)*100)}% model + ${Math.round(state.mw*100)}% ${r.market.src} (zonder marge).` : "Nog geen quoteringen voor deze wedstrijd: eindkans = model.";
+  const used = r.market && !(state.mw>0) ? "Eindkans = alleen het model; de quoteringen tellen niet mee in de kans en dienen alleen om de verwachte waarde te berekenen." : r.market? `Eindkans = ${Math.round((1-state.mw)*100)}% model + ${Math.round(state.mw*100)}% ${r.market.src} (zonder marge).` : "Nog geen quoteringen voor deze wedstrijd: eindkans = model.";
   $("oddsNote").textContent = `${used} Het percentage onder een quotering is de verwachte waarde: positief betekent dat de eindkans hoger is dan de quotering suggereert. ${o.auto365?(OLAB()==="bet365"?"bet365":"Hoogste prijs over meerdere bookmakers ("+((DATA.odds||{}).source||"")+")")+" automatisch opgehaald ("+nlDate((DATA.odds||{}).updated||todayISO())+"); ":""}je kunt de quoteringen zelf aanpassen als ze veranderd zijn.`;
   $("otbl").querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
     const src=inp.dataset.src, vals=[...$("otbl").querySelectorAll(`input[data-src="${src}"]`)].map(x=>parseFloat(String(x.value).replace(",",".")));
@@ -1209,7 +1209,7 @@ function local(qRaw){
     const list=(pos.length?pos:all).slice(0,N);
     head = pos.length? `Beste ${list.length===1?"bet":list.length+" bets"} op basis van kans × quotering (${esc(where)}):` : `Geen positieve verwachte waarde gevonden (${esc(where)}). Dit komen het dichtst bij:`;
     rows=list.map(v=>fmtItem(v.x, v.k===0?v.x.h+" wint":v.k===2?v.x.a+" wint":"Gelijkspel", v.p, v.odd, `EV ${v.ev>=0?"+":""}${Math.round(v.ev*100)}%`));
-    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans is een mix van model en quoteringen (instelbaar onder Modelinstellingen). Bij KKD, 2. Bundesliga, Ligue 2, LaLiga 2, Serie B, Liga Portugal en Pro League is de quotering de hoogste prijs over meerdere bookmakers. Geen garantie, speel verantwoord.</p>`;
+    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans komt alleen uit het model; de quoteringen dienen alleen voor de vergelijking. Bij KKD, 2. Bundesliga, Ligue 2, LaLiga 2, Serie B, Liga Portugal en Pro League is de quotering de hoogste prijs over meerdere bookmakers. Geen garantie, speel verantwoord.</p>`;
   }
   const m={
     sure:{sort:x=>Math.max(x.r.ph,x.r.pd,x.r.pa), pick:x=>{const k=[x.r.ph,x.r.pd,x.r.pa]; const i=k.indexOf(Math.max(...k)); return i===0?x.h+" wint":i===2?x.a+" wint":"Gelijkspel";}, odd:x=>{if(!x.o)return null;const k=[x.r.ph,x.r.pd,x.r.pa];return x.o[k.indexOf(Math.max(...k))];}, h:"Zekerste uitkomsten"},
@@ -1228,7 +1228,7 @@ function context(){
   const lines=P.slice(0,220).map(x=>{ const r=x.r; const ev=x.o?[r.ph,r.pd,r.pa].map((p,k)=>Math.round((p*x.o[k]-1)*100)):null;
     return `${x.d} ${x.t}|${cName(x.k)}|${x.h} - ${x.a}|1 ${pc(r.ph)} X ${pc(r.pd)} 2 ${pc(r.pa)}|tip ${x.s.tip}|uitslag ${x.s.sc.i}-${x.s.sc.j}|o2.5 ${pc(r.o25)}|btts ${pc(r.btts)}|xG ${fmt2(r.lh)}-${fmt2(r.la)}${x.o?`|quotering ${x.o.map(od).join("/")}|EV% ${ev.join("/")}`:""}`; });
   return `Je bent de wedstrijdassistent op een Nederlandse voorspellingspagina (Scorito). Vandaag is ${today}. Geselecteerde competities: ${state.sel.map(cFull).join(", ")||"geen"}.
-Antwoord in het Nederlands, kort en concreet. Gebruik UITSLUITEND de data hieronder (kansen van het model, gemengd met bookmakerquoteringen waar die er zijn). "Beste bet" = hoogste verwachte waarde (EV = kans × quotering − 1) met redelijke kans (≥25%). Lijstjes als regels die beginnen met "- ", met datum, wedstrijd, keuze, kans en quotering. Geen tabellen, geen koppen. Verzin geen wedstrijden of quoteringen. Sluit bij bet-advies af met één korte regel dat het geen garantie is.
+Antwoord in het Nederlands, kort en concreet. Gebruik UITSLUITEND de data hieronder. De kansen komen alleen uit het eigen model (niet uit de bookmakers); de quoteringen staan er alleen bij om de verwachte waarde te berekenen. "Beste bet" = hoogste verwachte waarde (EV = kans × quotering − 1) met redelijke kans (≥25%). Lijstjes als regels die beginnen met "- ", met datum, wedstrijd, keuze, kans en quotering. Geen tabellen, geen koppen. Verzin geen wedstrijden of quoteringen. Sluit bij bet-advies af met één korte regel dat het geen garantie is.
 Formaat per regel: datum tijd|competitie|thuis - uit|kansen|tip|voorspelde uitslag|kans >2,5 goals|kans beide scoren|verwachte goals|quotering 1/X/2|EV% 1/X/2
 ${lines.join("\n")}`;
 }
