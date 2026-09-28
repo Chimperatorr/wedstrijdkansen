@@ -1,0 +1,154 @@
+<div class="cb" id="cb" data-open="false">
+  <button type="button" class="cbfab" id="cbFab" aria-label="Open de wedstrijdassistent" aria-expanded="false">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 6.5a1.5 1.5 0 1 0 0 .01zm5 0a1.5 1.5 0 1 0 0 .01zm5 0a1.5 1.5 0 1 0 0 .01z"/></svg>
+  </button>
+  <section class="cbpanel" id="cbPanel" aria-label="Wedstrijdassistent" hidden>
+    <header class="cbhead"><div><b>Wedstrijdassistent</b><small id="cbMode">Rekent met de kansen en quoteringen op deze pagina</small></div>
+      <button type="button" class="cbmin" id="cbMin" aria-label="Minimaliseren">—</button></header>
+    <div class="cblog" id="cbLog" aria-live="polite"></div>
+    <div class="cbchips" id="cbChips"></div>
+    <form class="cbform" id="cbForm"><input id="cbIn" type="text" autocomplete="off" placeholder="Bijv. top 5 value bets dit weekend" aria-label="Vraag"><button type="submit" id="cbSend" aria-label="Versturen">➤</button></form>
+  </section>
+</div>
+<script>
+(()=>{
+const $c=id=>document.getElementById(id);
+let SAMPLE=null, busy=null, turns=[];
+const CHIPS=["Beste bet deze week","Top 5 zekerste winnaars","Lijst over 2,5 goals","BTTS-lijst","Value bets Eredivisie","Voorspelde uitslagen dit weekend"];
+const ALIAS=[["ere",/eredivisie/],["nl2",/kkd|keuken|eerste divisie|kampioen divisie/],["en1",/premier league|engeland|epl/],["en2",/championship/],["es1",/la liga|laliga|spanje|spaans/],["it1",/serie a|itali/],["de2",/2\.? ?bundesliga|tweede bundesliga/],["de1",{test:q=>/duitsland|duits/.test(q)||/bundesliga/.test(q.replace(/(2\.? ?|tweede )bundesliga/g,""))}],["fr1",/ligue 1|frankrijk|frans/],["pt1",/portugal|liga portugal|portugees/],["be1",/pro league|belgi/],["nl:all",/nations league|interland|landen/]];
+const DAYS={maandag:1,dinsdag:2,woensdag:3,donderdag:4,vrijdag:5,zaterdag:6,zondag:0};
+const pc=p=>Math.round(p*100)+"%", od=x=>x.toFixed(2);
+const shortD=s=>toD(s).toLocaleDateString("nl-NL",{weekday:"short",day:"numeric",month:"short"});
+const addDays=(iso,n)=>new Date(toD(iso).getTime()+n*dayMs).toISOString().slice(0,10);
+
+// alle wedstrijden met kansen in een periode
+function pool(comps, from, to){
+  const keep=state.sel, cur=state.fk, out=[];
+  state.sel=comps;
+  const fx=allFixtures().filter(f=>f[0]>=from&&f[0]<=to);
+  state.sel=keep;
+  fx.forEach(f=>{ use(f.k); const r=fullModel(f[1],f[2],f[0]), s=summary(r);
+    out.push({k:f.k, key:f.k+"#"+f.slice(0,3).join("|"), d:f[0], t:f[3]||"", h:f[1], a:f[2], r, s, o:r.market?r.market.o:null}); });
+  use(cur);
+  return out.sort((x,y)=>(x.d+x.t).localeCompare(y.d+y.t));
+}
+function firstDate(comps, from){ const keep=state.sel, cur=state.fk; state.sel=comps; const d=allFixtures().map(f=>f[0]).filter(d=>d>=from).sort()[0]; state.sel=keep; use(cur); return d; }
+function scope(q){
+  const today=todayISO(); let from=today, to=addDays(today,6), label="de komende 7 dagen", rel=false;
+  if(/vandaag/.test(q)){ to=today; label="vandaag"; }
+  else if(/morgen/.test(q)){ from=to=addDays(today,1); label="morgen"; }
+  else if(/weekend/.test(q)){ rel=true; const dow=toD(today).getUTCDay(); const sat=addDays(today,(6-dow+7)%7); from=addDays(sat,-1); to=addDays(sat,1); label="het weekend (vr–zo)"; }
+  else if(/volgende week/.test(q)){ from=addDays(today,7); to=addDays(today,13); label="volgende week"; }
+  else if(/maand|30 dagen/.test(q)){ to=addDays(today,30); label="de komende 30 dagen"; }
+  else { for(const [w,n] of Object.entries(DAYS)) if(q.includes(w)){ rel=true; const dow=toD(today).getUTCDay(); from=to=addDays(today,(n-dow+7)%7); label=w; break; } }
+  let comps=ALIAS.filter(([k,re])=>re.test(q)).map(([k])=>k);
+  const named=comps.length>0;
+  if(!named) comps = state.sel.length? state.sel.slice() : COMPS.map(c=>c.k);
+  const explicit=/vandaag|morgen|weekend|volgende week|maand|30 dagen/.test(q)||rel;
+  const has=()=>{ const d=firstDate(comps,from); return d && d<=to; };
+  if(!explicit && !has()){ const d=firstDate(comps,today); if(d){ from=d; to=addDays(d,6); label=`de eerstvolgende speelronde (${shortD(from)} – ${shortD(to)})`; } }
+  else if(rel){ for(let i=0;i<5&&!has();i++){ from=addDays(from,7); to=addDays(to,7); } if(from>addDays(today,6)) label+=` ${shortD(from)}${to!==from?" – "+shortD(to):""}`; }
+  return {from,to,label,comps,named};
+}
+function fmtItem(x, pick, p, odd, extra){
+  return `<button type="button" class="cbit" data-k="${esc(x.key)}"><span class="cbm">${esc(shortD(x.d))}${x.t?" "+esc(x.t):""} · ${esc(cName(x.k))}</span><span class="cbt">${esc(x.h)} – ${esc(x.a)}</span><span class="cbp"><b>${esc(pick)}</b> · ${pc(p)}${odd?` · @${od(odd)}`:""}${extra?` · ${extra}`:""}</span></button>`;
+}
+function local(qRaw){
+  const q=qRaw.toLowerCase();
+  const nm=q.match(/\b(\d{1,2})\b/); const N=Math.min(20,Math.max(1,nm?+nm[1]:5));
+  const sc=scope(q), P=pool(sc.comps, sc.from, sc.to);
+  const where=`${sc.label}${sc.named?" · "+sc.comps.map(cName).join(", "):state.sel.length?" · je geselecteerde competities":""}`;
+  // specifiek team? (zoek over alle competities in de komende 30 dagen)
+  const TP=pool(COMPS.map(c=>c.k), todayISO(), addDays(todayISO(),30));
+  const teams=[...new Set(TP.flatMap(x=>[x.h,x.a]))].filter(t=>t.length>=3 && new RegExp("(^|[^a-zà-ÿ])"+t.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"($|[^a-zà-ÿ])").test(q));
+  if(teams.length && !/lijst|top|beste|value/.test(q)){
+    const x=TP.find(y=>teams.includes(y.h)||teams.includes(y.a));
+    const r=x.r, s=x.s, ev=x.o?[r.ph,r.pd,r.pa].map((p,k)=>p*x.o[k]-1):null;
+    const lab=["1 · "+x.h,"X · gelijk","2 · "+x.a];
+    let bestV=""; if(ev){ const k=ev.indexOf(Math.max(...ev)); bestV=`<p>Beste waarde volgens bet365: <b>${esc(lab[k])}</b> @${od(x.o[k])} (verwachte waarde ${ev[k]>=0?"+":""}${Math.round(ev[k]*100)}%).</p>`; }
+    return `<p><b>${esc(x.h)} – ${esc(x.a)}</b>, ${esc(shortD(x.d))} ${esc(x.t)}</p><p>1 ${pc(r.ph)} · X ${pc(r.pd)} · 2 ${pc(r.pa)}. Tip <b>${s.tip}</b>, voorspelde uitslag <b>${s.sc.i}-${s.sc.j}</b>, goals ${esc(s.g.toLowerCase())} (${pc(s.gP)}), BTTS ${s.bt} (${pc(r.btts)}).</p>${bestV}${fmtItem(x,"Open analyse",Math.max(r.ph,r.pd,r.pa),null,"")}`;
+  }
+  let type=null;
+  if(/value|waarde|beste bet|beste gok|beste weddenschap|\bbet\b|wedden|inzet/.test(q)) type="value";
+  else if(/under|minder dan|weinig goals/.test(q)) type="under";
+  else if(/over|goals|doelpunt|veel goals/.test(q)) type="over";
+  else if(/btts|beide|allebei/.test(q)) type="btts";
+  else if(/gelijk/.test(q)) type="draw";
+  else if(/uitslag|voorspel|scorito|score/.test(q)) type="score";
+  else if(/zeker|banker|favoriet|winnaar|lijst|tips?\b|top|kans/.test(q)) type="sure";
+  if(!type) return null;
+  if(!P.length) return `Geen wedstrijden gevonden voor ${esc(where)}.`;
+  let rows=[], head="";
+  if(type==="value"){
+    const all=[]; P.forEach(x=>{ if(!x.o) return; const pr=[x.r.ph,x.r.pd,x.r.pa]; pr.forEach((p,k)=>{ if(p<0.2) return; all.push({x,k,p,odd:x.o[k],ev:p*x.o[k]-1}); }); });
+    if(!all.length) return `Voor ${esc(where)} zijn er geen bet365-quoteringen. Quoteringen zijn er voor Eredivisie, Premier League, Bundesliga, La Liga en Serie A. Vraag bijvoorbeeld "top 5 zekerste" voor een lijst op basis van kansen.`;
+    all.sort((a,b)=>b.ev-a.ev);
+    const pos=all.filter(v=>v.ev>0);
+    const list=(pos.length?pos:all).slice(0,N);
+    head = pos.length? `Beste ${list.length===1?"bet":list.length+" bets"} op basis van kans × quotering (${esc(where)}):` : `Geen positieve verwachte waarde gevonden (${esc(where)}). Dit komen het dichtst bij:`;
+    rows=list.map(v=>fmtItem(v.x, v.k===0?v.x.h+" wint":v.k===2?v.x.a+" wint":"Gelijkspel", v.p, v.odd, `EV ${v.ev>=0?"+":""}${Math.round(v.ev*100)}%`));
+    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans is een mix van model en bet365 (instelbaar onder Modelinstellingen). Geen garantie, speel verantwoord.</p>`;
+  }
+  const m={
+    sure:{sort:x=>Math.max(x.r.ph,x.r.pd,x.r.pa), pick:x=>{const k=[x.r.ph,x.r.pd,x.r.pa]; const i=k.indexOf(Math.max(...k)); return i===0?x.h+" wint":i===2?x.a+" wint":"Gelijkspel";}, odd:x=>{if(!x.o)return null;const k=[x.r.ph,x.r.pd,x.r.pa];return x.o[k.indexOf(Math.max(...k))];}, h:"Zekerste uitkomsten"},
+    over:{sort:x=>x.r.o25, pick:()=>"Meer dan 2,5 goals", h:"Meeste kans op meer dan 2,5 goals"},
+    under:{sort:x=>1-x.r.o25, pick:()=>"Minder dan 2,5 goals", h:"Meeste kans op minder dan 2,5 goals"},
+    btts:{sort:x=>x.r.btts, pick:()=>"Beide teams scoren", h:"Meeste kans dat beide teams scoren"},
+    draw:{sort:x=>x.r.pd, pick:()=>"Gelijkspel", odd:x=>x.o?x.o[1]:null, h:"Meeste kans op gelijkspel"},
+    score:{sort:x=>x.s.sc.p, pick:x=>`${x.s.sc.i}-${x.s.sc.j} (tip ${x.s.tip})`, h:"Voorspelde uitslagen"}
+  }[type];
+  let list = type==="score" ? P.slice(0, /top|\d/.test(q)?N:Math.min(P.length,20)) : [...P].sort((a,b)=>m.sort(b)-m.sort(a)).slice(0,N);
+  rows=list.map(x=>fmtItem(x, m.pick(x), type==="score"?x.s.sc.p:m.sort(x), m.odd?m.odd(x):null, ""));
+  return `<p>${m.h} (${esc(where)}):</p>${rows.join("")}`;
+}
+function context(){
+  const today=todayISO(), P=pool(COMPS.map(c=>c.k), today, addDays(today,13));
+  const lines=P.slice(0,220).map(x=>{ const r=x.r; const ev=x.o?[r.ph,r.pd,r.pa].map((p,k)=>Math.round((p*x.o[k]-1)*100)):null;
+    return `${x.d} ${x.t}|${cName(x.k)}|${x.h} - ${x.a}|1 ${pc(r.ph)} X ${pc(r.pd)} 2 ${pc(r.pa)}|tip ${x.s.tip}|uitslag ${x.s.sc.i}-${x.s.sc.j}|o2.5 ${pc(r.o25)}|btts ${pc(r.btts)}|xG ${fmt2(r.lh)}-${fmt2(r.la)}${x.o?`|bet365 ${x.o.map(od).join("/")}|EV% ${ev.join("/")}`:""}`; });
+  return `Je bent de wedstrijdassistent op een Nederlandse voorspellingspagina (Scorito). Vandaag is ${today}. Geselecteerde competities: ${state.sel.map(cFull).join(", ")||"geen"}.
+Antwoord in het Nederlands, kort en concreet. Gebruik UITSLUITEND de data hieronder (kansen van het model, gemengd met bet365 waar quoteringen zijn). "Beste bet" = hoogste verwachte waarde (EV = kans × quotering − 1) met redelijke kans (≥25%). Lijstjes als regels die beginnen met "- ", met datum, wedstrijd, keuze, kans en quotering. Geen tabellen, geen koppen. Verzin geen wedstrijden of quoteringen. Sluit bij bet-advies af met één korte regel dat het geen garantie is.
+Formaat per regel: datum tijd|competitie|thuis - uit|kansen|tip|voorspelde uitslag|kans >2,5 goals|kans beide scoren|verwachte goals|bet365 1/X/2|EV% 1/X/2
+${lines.join("\n")}`;
+}
+function md(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").split(/\n/).map(l=>/^\s*[-•]\s+/.test(l)?`<li>${l.replace(/^\s*[-•]\s+/,"")}</li>`:(l.trim()?`<p>${l}</p>`:"")).join("").replace(/(<li>.*?<\/li>)+/g,m=>`<ul>${m}</ul>`); }
+function add(role, html){ const d=document.createElement("div"); d.className="cbmsg "+role; d.innerHTML=html; $c("cbLog").appendChild(d); $c("cbLog").scrollTop=$c("cbLog").scrollHeight; return d; }
+async function ask(q){
+  q=q.trim(); if(!q||busy) return;
+  add("me", esc(q)); $c("cbIn").value="";
+  let ans=null; try{ ans=local(q); }catch(e){ ans=null; }
+  if(ans){ add("bot", ans); turns.push({role:"user",content:q},{role:"assistant",content:"(lijst getoond op de pagina)"}); return; }
+  if(!SAMPLE){ add("bot", `Dat snap ik niet helemaal. Ik kan onder meer:<ul><li>beste bet / value bets (met bet365-quoteringen)</li><li>top 5 zekerste winnaars</li><li>lijst over 2,5 of minder dan 2,5 goals</li><li>BTTS-lijst, meeste kans op gelijkspel</li><li>voorspelde uitslagen</li><li>een team, bijv. "PSV"</li></ul>Voeg een competitie of dag toe: "Eredivisie", "weekend", "zaterdag", "morgen".`); return; }
+  const bubble=add("bot","<p class='cbthink'>Denkt na…</p>"); const ctl=new AbortController(); busy=ctl; $c("cbSend").textContent="■"; $c("cbSend").setAttribute("aria-label","Stoppen");
+  const hist=turns.slice(-8);
+  try{
+    const {text}=await SAMPLE([{role:"user",content:context()},...hist,{role:"user",content:q}],{cache:false,signal:ctl.signal,onText:({text})=>{bubble.innerHTML=md(text); $c("cbLog").scrollTop=$c("cbLog").scrollHeight;}});
+    turns.push({role:"user",content:q},{role:"assistant",content:text});
+  }catch(e){
+    if(e?.code==="cancelled"){ if(!e.text) bubble.remove(); }
+    else if(["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(e?.code)){ SAMPLE=null; bubble.innerHTML="Vrije vragen aan Claude zijn hier niet beschikbaar. Vaste vragen zoals \"beste bet\" of \"top 5 zekerste\" werken wel."; $c("cbMode").textContent="Rekent met de kansen en quoteringen op deze pagina"; }
+    else if(e?.code==="rate_limited") bubble.innerHTML=(e.text?md(e.text):"")+"<p class='cbnote'>Even te veel vragen, probeer het straks opnieuw.</p>";
+    else bubble.innerHTML=(e?.text?md(e.text):"")+"<p class='cbnote'>Er ging iets mis. Probeer het opnieuw.</p>";
+  }finally{ busy=null; $c("cbSend").textContent="➤"; $c("cbSend").setAttribute("aria-label","Versturen"); }
+}
+function openFixture(k){
+  const [c,rest]=k.split("#"), [d,h,a]=rest.split("|");
+  if(!state.sel.includes(c)){ state.sel=COMPS.map(x=>x.k).filter(x=>x===c||state.sel.includes(x)); try{localStorage.setItem("wk_sel",JSON.stringify(state.sel));}catch(e){} }
+  const dd=toD(d); state.week=new Date(dd.getTime()-((dd.getUTCDay()+6)%7)*dayMs).toISOString().slice(0,10); state.day="all";
+  state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=k; state.open=true;
+  applyComp(); setStamp(LIVE); renderAll();
+  if(matchMedia("(max-width:720px)").matches) setOpen(false);
+  const row=[...document.querySelectorAll("#tbl button.trow")].find(x=>x.dataset.k===k);
+  if(row){ const bar=document.querySelector(".appbar"), off=(bar&&getComputedStyle(bar).position!=="static"?bar.offsetHeight:0)+8; window.scrollTo({top:row.getBoundingClientRect().top+scrollY-off,behavior:"smooth"}); }
+}
+function setOpen(o){ $c("cb").dataset.open=o; $c("cbPanel").hidden=!o; $c("cbFab").hidden=o; $c("cbFab").setAttribute("aria-expanded",o); try{localStorage.setItem("wk_chat",o?"1":"0");}catch(e){} if(o) setTimeout(()=>$c("cbIn").focus(),50); }
+$c("cbFab").addEventListener("click",()=>setOpen(true));
+$c("cbMin").addEventListener("click",()=>setOpen(false));
+$c("cbForm").addEventListener("submit",e=>{ e.preventDefault(); if(busy){ busy.abort(); return; } ask($c("cbIn").value); });
+$c("cbChips").innerHTML=CHIPS.map(c=>`<button type="button">${esc(c)}</button>`).join("");
+$c("cbChips").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) ask(b.textContent); });
+$c("cbLog").addEventListener("click",e=>{ const b=e.target.closest("button.cbit"); if(b) openFixture(b.dataset.k); });
+add("bot","Hoi! Vraag me naar de <b>beste bet</b>, een <b>lijstje</b> (zekerste winnaars, over 2,5, BTTS, gelijkspel) of een team. Ik kijk naar je geselecteerde competities, tenzij je er een noemt.");
+try{ if(localStorage.getItem("wk_chat")==="1") setOpen(true); }catch(e){}
+(async()=>{ try{ const s=await window.claude?.use?.("sample"); if(s){ SAMPLE=s; $c("cbMode").textContent="Vaste vragen direct; vrije vragen via Claude"; } }catch(e){} })();
+})();
+</script>
