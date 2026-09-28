@@ -21,6 +21,9 @@ META = {
   "es1": {"name": "La Liga", "country": "Spanje", "of": "es.1", "tz": 0, "up": None, "down": "es.2"},
   "de1": {"name": "Bundesliga", "country": "Duitsland", "of": "de.1", "tz": 0, "up": None, "down": "de.2"},
   "de2": {"name": "2. Bundesliga", "country": "Duitsland", "openliga": True, "prevof": "de.2", "tz": 0, "up": "de.1", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
+  "fr2": {"name": "Ligue 2", "country": "Frankrijk", "fc": "fr2", "prevof": "fr.2", "tz": 0, "up": "fr.1", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "es2": {"name": "LaLiga 2", "country": "Spanje", "fc": "es2", "prevof": "es.2", "tz": 0, "up": "es.1", "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "it2": {"name": "Serie B", "country": "Italië", "fc": "it2", "prevof": "it.2", "tz": 0, "up": "it.1", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "fr1": {"name": "Ligue 1", "country": "Frankrijk", "of": "fr.1", "tz": 0, "up": None, "down": "fr.2"},
   "pt1": {"name": "Liga Portugal", "country": "Portugal", "of": "pt.1", "tz": 1, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
   "nl2": {"name": "Keuken Kampioen Divisie", "country": "Nederland", "fc": "nl.2", "tz": 0, "up": "ere", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
@@ -71,6 +74,16 @@ NAMES = {
   "Standard Liège": "Standard Luik", "Union Saint-Gilloise": "Union SG", "FCV Dender EH": "Dender",
   # fcupdate-afkortingen
   "OHL": "OH Leuven", "R. Union SG": "Union SG", "WB": "Beveren", "ZW": "Zulte Waregem", "Standard": "Standard Luik",
+  # Ligue 2 / LaLiga 2 / Serie B (openfootball vorig seizoen + BetExplorer)
+  "AS Nancy Lorraine": "Nancy", "AS Saint-Étienne": "Saint-Étienne", "St Etienne": "Saint-Étienne", "Clermont Foot 63": "Clermont",
+  "EA Guingamp": "Guingamp", "Grenoble Foot 38": "Grenoble", "Montpellier HSC": "Montpellier", "Rodez AF": "Rodez", "Stade Lavallois": "Laval",
+  "Stade de Reims": "Reims", "US Boulogne": "Boulogne", "USL Dunkerque": "Dunkerque", "ESTAC Troyes": "Troyes", "Amiens SC": "Amiens", "SC Bastia": "Bastia",
+  "UD Almería": "Almería", "Almeria": "Almería", "SD Eibar": "Eibar", "CD Castellón": "Castellón", "Castellon": "Castellón", "AD Ceuta": "Ceuta",
+  "Gijon": "Sporting Gijón", "Burgos CF": "Burgos", "Cordoba": "Córdoba", "Leganes": "Leganés", "Cadiz CF": "Cádiz", "Valladolid": "Real Valladolid",
+  "Oviedo": "Real Oviedo", "Granada CF": "Granada", "SD Huesca": "Huesca", "CD Mirandés": "Mirandés", "Real Zaragoza": "Zaragoza",
+  "Calcio Padova": "Padova", "Carrarese Calcio": "Carrarese", "Mantova 1911 SSD": "Mantova", "US Avellino": "Avellino", "US Catanzaro": "Catanzaro",
+  "Verona": "Hellas Verona", "Sudtirol": "Südtirol", "Entella": "Virtus Entella", "L.R. Vicenza": "Vicenza", "AC Reggiana 1919": "Reggiana",
+  "Delfino Pescara": "Pescara", "SSC Bari": "Bari", "Spezia Calcio": "Spezia",
   # Eredivisie vorig seizoen (voor degradanten KKD)
   "Heracles Almelo": "Heracles", "NAC Breda": "NAC", "FC Volendam": "Volendam",
 }
@@ -159,6 +172,7 @@ def norm(s):
     s = s.replace("maastricht", "mvv").replace("venlo", "vvv").replace("bruges", "brugge").replace("st. truidense", "sint truiden").replace("st truidense", "sint truiden")
     s = s.replace("standard liege", "standard luik").replace("union saint-gilloise", "union sg").replace("oud-heverlee leuven", "oh leuven").replace("royal antwerp", "antwerp")
     s = s.replace("sporting lisbon", "sporting cp").replace("benfica lisbon", "benfica").replace("vitoria sc guimaraes", "vitoria guimaraes").replace("hertha bsc berlin", "hertha")
+    s = s.replace("alto adige", "sudtirol").replace("nancy-lorraine", "nancy").replace("red star 93", "red star").replace("real sociedad san sebastian b", "real sociedad b").replace("clermont foot", "clermont")
     s = s.replace("psg", "paris sg").replace("paris saint-germain", "paris sg").replace("a coruna", "la coruna")
     s = re.sub(r"\b(fc|afc|cf|sc|ac|as|club|de|calcio|tsg|vfl|vfb|sv|1\.|the)\b", " ", s)
     return re.sub(r"[^a-z ]", " ", s).split()
@@ -307,7 +321,7 @@ def main():
             "matches": sorted(played), "prevMatches": sorted(prevm or []), "fixtures": fx,
             "absences": [], "noAbs": True,
             "odds": {"bet365": odds, "updated": TODAY if odds else None, "source": M.get("osrc", "bet365"), "label": M.get("olabel", "bet365")},
-            "source": ("openfootball (github.com/openfootball)" if M.get("of") else
+            "source": (M["src"] if M.get("src") else "openfootball (github.com/openfootball)" if M.get("of") else
                         "openfootball/openligadb" if M.get("openliga") else "fcupdate.nl"),
         }
         out[code] = doc

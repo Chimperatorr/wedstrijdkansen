@@ -15,7 +15,7 @@
 const $c=id=>document.getElementById(id);
 let SAMPLE=null, busy=null, turns=[];
 const CHIPS=["Beste bet deze week","Top 5 zekerste winnaars","Lijst over 2,5 goals","BTTS-lijst","Value bets Eredivisie","Voorspelde uitslagen dit weekend"];
-const ALIAS=[["ere",/eredivisie/],["nl2",/kkd|keuken|eerste divisie|kampioen divisie/],["en1",/premier league|engeland|epl/],["en2",/championship/],["es1",/la liga|laliga|spanje|spaans/],["it1",/serie a|itali/],["de2",/2\.? ?bundesliga|tweede bundesliga/],["de1",{test:q=>/duitsland|duits/.test(q)||/bundesliga/.test(q.replace(/(2\.? ?|tweede )bundesliga/g,""))}],["fr1",/ligue 1|frankrijk|frans/],["pt1",/portugal|liga portugal|portugees/],["be1",/pro league|belgi/],["nl:all",/nations league|interland|landen/]];
+const ALIAS=[["ere",/eredivisie/],["nl2",/kkd|keuken|eerste divisie|kampioen divisie/],["en1",/premier league|engeland|epl/],["en2",/championship/],["es2",/(la ?liga ?2|segunda|laliga2)/],["es1",{test:q=>/spanje|spaans/.test(q)||/la ?liga/.test(q.replace(/la ?liga ?2|laliga2/g,""))}],["it2",/serie b/],["it1",/serie a|itali/],["de2",/2\.? ?bundesliga|tweede bundesliga/],["de1",{test:q=>/duitsland|duits/.test(q)||/bundesliga/.test(q.replace(/(2\.? ?|tweede )bundesliga/g,""))}],["fr2",/ligue 2/],["fr1",/ligue 1|frankrijk|frans/],["pt1",/portugal|liga portugal|portugees/],["be1",/pro league|belgi/],["nl:all",/nations league|interland|landen/]];
 const DAYS={maandag:1,dinsdag:2,woensdag:3,donderdag:4,vrijdag:5,zaterdag:6,zondag:0};
 const pc=p=>Math.round(p*100)+"%", od=x=>x.toFixed(2);
 const shortD=s=>toD(s).toLocaleDateString("nl-NL",{weekday:"short",day:"numeric",month:"short"});
@@ -87,7 +87,7 @@ function local(qRaw){
     const list=(pos.length?pos:all).slice(0,N);
     head = pos.length? `Beste ${list.length===1?"bet":list.length+" bets"} op basis van kans × quotering (${esc(where)}):` : `Geen positieve verwachte waarde gevonden (${esc(where)}). Dit komen het dichtst bij:`;
     rows=list.map(v=>fmtItem(v.x, v.k===0?v.x.h+" wint":v.k===2?v.x.a+" wint":"Gelijkspel", v.p, v.odd, `EV ${v.ev>=0?"+":""}${Math.round(v.ev*100)}%`));
-    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans is een mix van model en quoteringen (instelbaar onder Modelinstellingen). Bij KKD, 2. Bundesliga, Liga Portugal en Pro League is de quotering de hoogste prijs over meerdere bookmakers. Geen garantie, speel verantwoord.</p>`;
+    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans is een mix van model en quoteringen (instelbaar onder Modelinstellingen). Bij KKD, 2. Bundesliga, Ligue 2, LaLiga 2, Serie B, Liga Portugal en Pro League is de quotering de hoogste prijs over meerdere bookmakers. Geen garantie, speel verantwoord.</p>`;
   }
   const m={
     sure:{sort:x=>Math.max(x.r.ph,x.r.pd,x.r.pa), pick:x=>{const k=[x.r.ph,x.r.pd,x.r.pa]; const i=k.indexOf(Math.max(...k)); return i===0?x.h+" wint":i===2?x.a+" wint":"Gelijkspel";}, odd:x=>{if(!x.o)return null;const k=[x.r.ph,x.r.pd,x.r.pa];return x.o[k.indexOf(Math.max(...k))];}, h:"Zekerste uitkomsten"},

@@ -141,9 +141,10 @@ const LG = JSON.parse(JSON.stringify(EMB_L));
 const COMPS = [
   {k:"ere",c:"Nederland",n:"Eredivisie"},{k:"nl2",c:"Nederland",n:"Keuken Kampioen Divisie"},
   {k:"en1",c:"Engeland",n:"Premier League"},{k:"en2",c:"Engeland",n:"Championship"},
-  {k:"es1",c:"Spanje",n:"La Liga"},{k:"it1",c:"Italië",n:"Serie A"},
+  {k:"es1",c:"Spanje",n:"La Liga"},{k:"es2",c:"Spanje",n:"LaLiga 2"},
+  {k:"it1",c:"Italië",n:"Serie A"},{k:"it2",c:"Italië",n:"Serie B"},
   {k:"de1",c:"Duitsland",n:"Bundesliga"},{k:"de2",c:"Duitsland",n:"2. Bundesliga"},
-  {k:"fr1",c:"Frankrijk",n:"Ligue 1"},{k:"pt1",c:"Portugal",n:"Liga Portugal"},
+  {k:"fr1",c:"Frankrijk",n:"Ligue 1"},{k:"fr2",c:"Frankrijk",n:"Ligue 2"},{k:"pt1",c:"Portugal",n:"Liga Portugal"},
   {k:"be1",c:"België",n:"Pro League"},
   {k:"nl:all",c:"Internationaal",n:"Nations League"}
 ];
