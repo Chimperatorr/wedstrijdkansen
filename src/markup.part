@@ -1,0 +1,756 @@
+</style>
+
+<header class="appbar"><div class="in">
+  <h1>Wedstrijdkansen<small id="appsub">Eredivisie 2026/27 · seizoen, historie, vorm en blessures</small></h1>
+  <div class="status" aria-live="polite"><span class="dot" id="dot"></span><span id="stamp">Data laden…</span></div>
+</div></header>
+<div class="wrap">
+
+  <section class="panel wk" aria-label="Speelweek">
+    <div class="wkhead">
+      <div class="ixinfo">
+        <h2 id="compTitle">Eredivisie</h2>
+        <p><b>Index</b> = verwachte goals thuisploeg − verwachte goals uitploeg. Bij <span class="ih">+1,00</span> maakt de thuisploeg naar verwachting één goal meer, bij <span class="ia">−1,00</span> de uitploeg. Rond 0 zijn ze gelijkwaardig.</p>
+        <div class="ixscale" aria-hidden="true"><span class="ia">−1,5 uit sterker</span><span>0 gelijk</span><span class="ih">+1,5 thuis sterker</span></div>
+      </div>
+      <div class="dds">
+        <div class="dd ms"><span>Competities</span><details class="msel" id="compMs"><summary id="compSum">Eredivisie</summary><div class="mslist" id="compList"></div></details></div>
+        <label class="dd"><span>Speelweek</span><select id="weekSel"></select></label>
+      </div>
+    </div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="tbl" id="tbl"></div>
+    <p class="note">Tip: 1, X, 2, of dubbele kans (1X / X2) als niets boven 50% komt. Goals: +2,5 = meer dan 2,5 goals, −2,5 = minder. Tik op een wedstrijd voor de volledige analyse.</p>
+  </section>
+
+  <section class="board" id="detail" aria-label="Wedstrijd">
+    <div class="side home">
+      <span class="label">Thuis</span>
+      <span class="tname" id="homeName"></span>
+      <div class="xg"><span class="label">Verwachte goals</span><b id="xgH" class="num">–</b></div>
+    </div>
+    <div class="vs">
+      <span class="label">Meest waarschijnlijk</span>
+      <span class="big num" id="topScore">1–1</span>
+      <span class="label" id="when"></span>
+    </div>
+    <div class="side away">
+      <span class="label">Uit</span>
+      <span class="tname" id="awayName"></span>
+      <div class="xg"><b id="xgA" class="num">–</b><span class="label">Verwachte goals</span></div>
+    </div>
+  </section>
+
+  <section class="result" aria-label="Uitslagkansen">
+    <div class="bar" aria-hidden="true"><div class="h" id="barH"></div><div class="d" id="barD"></div><div class="a" id="barA"></div></div>
+    <div class="legend">
+      <div class="it"><span class="label" id="lblH">Thuiswinst</span><span class="pct num" id="pH" style="color:var(--home)">–</span><span class="odd num" id="oH"></span></div>
+      <div class="it"><span class="label">Gelijkspel</span><span class="pct num" id="pD" style="color:var(--draw)">–</span><span class="odd num" id="oD"></span></div>
+      <div class="it"><span class="label" id="lblA">Uitwinst</span><span class="pct num" id="pA" style="color:var(--away)">–</span><span class="odd num" id="oA"></span></div>
+    </div>
+    <p class="verdict" id="verdict"></p>
+  </section>
+
+  <section class="panel" aria-label="Advies">
+    <h2>Advies</h2>
+    <div class="advice">
+      <div class="adv" id="advW"></div>
+      <div class="adv g" id="advG"></div>
+      <div class="adv b" id="advB"></div>
+    </div>
+    <p class="note">Advies volgt direct uit de modelkansen: bij minder dan 55% zekerheid staat er "twijfel". Voorspelde uitslag = de meest waarschijnlijke score binnen de meest waarschijnlijke winnaar/gelijkspel.</p>
+  </section>
+
+  <section class="panel" id="h2hPanel" aria-label="Onderlinge duels">
+    <h2>Onderlinge duels</h2>
+    <div class="h2h">
+      <div class="h2hlist" id="h2hList"></div>
+      <div class="adv h2hpred" id="h2hPred"></div>
+    </div>
+  </section>
+
+  <div class="ctx">
+    <section class="panel team h" id="ctxH" aria-label="Thuisploeg"></section>
+    <section class="panel team a" id="ctxA" aria-label="Uitploeg"></section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-label="Uitslagenmatrix">
+      <h2>Kans per uitslag</h2>
+      <div class="axis-cap"><span>Rijen: goals <span class="hc" id="capH">thuis</span></span><span>Kolommen: goals <span class="ac" id="capA">uit</span></span></div>
+      <div class="hm-wrap"><div class="hm" id="hm"></div></div>
+      <p class="note">Paars thuis, groen uit, grijs gelijk. Hoe voller, hoe waarschijnlijker. Omlijnd is de meest waarschijnlijke uitslag.</p>
+    </section>
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+      <section class="panel" aria-label="Top uitslagen">
+        <h2>Top 6 uitslagen</h2>
+        <ul class="scores" id="scores"></ul>
+      </section>
+      <section class="panel" aria-label="Markten">
+        <h2>Overige markten</h2>
+        <dl class="mk" id="markets"></dl>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel" id="oddsPanel" aria-label="Quoteringen">
+    <div class="wkhead"><h2>Quoteringen</h2><span class="label" id="oddsSave"></span></div>
+    <div class="otbl" id="otbl"></div>
+    <p class="note" id="oddsNote"></p>
+  </section>
+
+  <details class="settings" id="settings">
+    <summary>Modelinstellingen</summary>
+    <div class="set-body">
+      <p class="explain">Per ploeg schat het model een aanvals- en verdedigingsfactor (1,00 = competitiegemiddelde) uit alle uitslagen van dit seizoen, gecorrigeerd voor de sterkte van de tegenstander en voor thuis/uit. Recente wedstrijden wegen zwaarder (vorm). Vorig seizoen telt als startpunt, alsof de ploeg al een aantal wedstrijden op dat niveau speelde. Daarna gaat er per geblesseerde of geschorste speler een stukje af. Verwachte goals thuis = <code>gemiddelde × aanval thuis × verdediging uit × thuisvoordeel</code>.</p>
+      <div class="set-grid">
+        <fieldset class="fs ere-only"><legend>Vorm en historie</legend>
+          <div class="rng"><label for="hl">Vorm: halfwaardetijd in dagen (lager = recente duels zwaarder)</label><input id="hl" type="range" min="10" max="365" step="5"><output class="num" id="hlo"></output></div>
+          <div class="rng"><label for="k">Gewicht vorig seizoen (in wedstrijden)</label><input id="k" type="range" min="0" max="20" step="1"><output class="num" id="ko"></output></div>
+        </fieldset>
+        <fieldset class="fs"><legend>Blessures en correcties</legend>
+          <div class="rng"><label for="inj">Gewicht blessures (100% = standaard)</label><input id="inj" type="range" min="0" max="2" step="0.05"><output class="num" id="injo"></output></div>
+          <div class="rng"><label for="mw">Gewicht bookmaker-quoteringen in de kansen (0% = alleen model)</label><input id="mw" type="range" min="0" max="1" step="0.05"><output class="num" id="mwo"></output></div>
+          <div class="rng"><label for="rho">Dixon-Coles ρ (negatief = meer gelijke spelen bij lage scores)</label><input id="rho" type="range" min="-0.2" max="0.05" step="0.01"><output class="num" id="rhoo"></output></div>
+        </fieldset>
+        <fieldset class="fs h"><legend id="fsH">Eigen correctie thuis</legend>
+          <div class="rng"><label for="aH">Aanval ×</label><input id="aH" type="range" min="0.7" max="1.3" step="0.01"><output class="num" id="aHo"></output></div>
+          <div class="rng"><label for="dH">Verdediging × (lager is beter)</label><input id="dH" type="range" min="0.7" max="1.3" step="0.01"><output class="num" id="dHo"></output></div>
+        </fieldset>
+        <fieldset class="fs a"><legend id="fsA">Eigen correctie uit</legend>
+          <div class="rng"><label for="aA">Aanval ×</label><input id="aA" type="range" min="0.7" max="1.3" step="0.01"><output class="num" id="aAo"></output></div>
+          <div class="rng"><label for="dA">Verdediging × (lager is beter)</label><input id="dA" type="range" min="0.7" max="1.3" step="0.01"><output class="num" id="dAo"></output></div>
+        </fieldset>
+      </div>
+      <div class="row"><button type="button" class="outbtn" id="reset">Terug naar standaard</button></div>
+    </div>
+  </details>
+
+  <footer id="foot">Poisson-model met Dixon-Coles-correctie. Blessure-impact per speler is een schatting (sleutelspeler, basisspeler of wisselspeler); langdurig geblesseerden tellen minder mee omdat hun afwezigheid al in de uitslagen zit. Onderlinge resultaten, motivatie en wisselende opstellingen zitten er niet in. Kansen zijn schattingen, geen garanties.</footer>
+</div>
+
+<script>
+const EMBEDDED = __DATA__;
+const EMB_L = __LEAGUES__;
+let MAIN = EMBEDDED, DATA = EMBEDDED;
+const LG = JSON.parse(JSON.stringify(EMB_L));
+const COMPS = [
+  {k:"ere",c:"Nederland",n:"Eredivisie"},{k:"nl2",c:"Nederland",n:"Keuken Kampioen Divisie"},
+  {k:"en1",c:"Engeland",n:"Premier League"},{k:"en2",c:"Engeland",n:"Championship"},
+  {k:"es1",c:"Spanje",n:"La Liga"},{k:"it1",c:"Italië",n:"Serie A"},
+  {k:"de1",c:"Duitsland",n:"Bundesliga"},{k:"de2",c:"Duitsland",n:"2. Bundesliga"},
+  {k:"fr1",c:"Frankrijk",n:"Ligue 1"},{k:"pt1",c:"Portugal",n:"Liga Portugal"},
+  {k:"be1",c:"België",n:"Pro League"},
+  {k:"nl:all",c:"Internationaal",n:"Nations League"}
+];
+const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
+const cName = k => CMAP[k]?.n || k, cFull = k => CMAP[k]? CMAP[k].c+" · "+CMAP[k].n : k;
+let RC = {};   // ratings per competitie
+const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0.5};
+const state = {more:{}, sel:["ere"], fk:"ere", comp:"ere", league:"all", home:null, away:null, date:null, fixture:null, week:null, day:"all", ...DEF, adj:{}, off:{}};
+const MAXG = 10, IMP=[0,0.015,0.03,0.06], PROMO={att:0.80,def:1.22};
+const $ = id => document.getElementById(id);
+const fmtP = p => (p*100).toFixed(1).replace(".",",") + "%";
+const fmt2 = v => v.toFixed(2).replace(".",",");
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dayMs=864e5, toD = s => new Date(s+"T12:00:00Z");
+const todayISO = () => new Date().toISOString().slice(0,10);
+const nlDate = s => toD(s).toLocaleDateString("nl-NL",{weekday:"short",day:"numeric",month:"short"});
+
+let R = null; // ratings actieve competitie
+function dataKey(k){ return k==="ere"||k.startsWith("nl:")? "main" : k; }
+function use(k){
+  if(!k || (dataKey(k)!=="main" && !LG[k])) k="ere";
+  state.comp = k.startsWith("nl:")? "nl" : k;
+  state.league = k.startsWith("nl:")? k.slice(3) : "all";
+  const dk=dataKey(k);
+  DATA = dk==="main"? MAIN : LG[k];
+  const rk = dk==="main"? "ere" : k;
+  if(!RC[rk]) RC[rk]=ratings();
+  R = RC[rk];
+}
+function valid(d){ return d && Array.isArray(d.teams) && Array.isArray(d.matches) && d.teams.length>1; }
+
+function ratings(){
+  const D=DATA, T=D.teams, n=T.length, idx=Object.fromEntries(T.map((t,i)=>[t,i]));
+  const played=D.matches.filter(m=>idx[m[1]]!==undefined&&idx[m[2]]!==undefined);
+  const ref = D.matches.length? D.matches.reduce((a,m)=>m[0]>a?m[0]:a,"") : todayISO();
+  const now = toD(ref).getTime();
+  // prior uit vorig seizoen
+  let pg=0,pgl=0; for(const t of T){const p=D.prev?.[t]; if(p&&p[0]){pg+=p[0];pgl+=p[1];}}
+  const prevMu = pg? pgl/pg : 1.55;
+  const prior = T.map(t=>{ const p=D.prev?.[t];
+    if(!p||!p[0]) return (D.rel||[]).includes(t)? {att:1.2,def:0.85,rel:true} : D.noPrev? {att:1,def:1,unk:true} : {...PROMO, promo:true};
+    const shrink=v=>1+(v-1)*0.8;
+    return {att:shrink(p[1]/p[0]/prevMu), def:shrink(p[2]/p[0]/prevMu)};
+  });
+  // gemiddelde en thuisvoordeel
+  let hg=0,ag=0; played.forEach(m=>{hg+=m[3];ag+=m[4];});
+  const nm=played.length;
+  const curMu = nm? (hg+ag)/(2*nm) : prevMu;
+  const mu = (curMu*nm + prevMu*60)/(nm+60);
+  const haRaw = nm&&ag? hg/ag : 1.25;
+  const ha = Math.sqrt((haRaw*nm + 1.3*200)/(nm+200));   // factor voor thuis, 1/ha voor uit
+  const w = played.map(m=>Math.pow(0.5,(now-toD(m[0]).getTime())/dayMs/state.hl));
+  const fit = (useW, K)=>{
+    let att=prior.map(p=>p.att), def=prior.map(p=>p.def);
+    for(let it=0;it<40;it++){
+      const na=Array(n).fill(0), da=Array(n).fill(0), nd=Array(n).fill(0), dd=Array(n).fill(0);
+      played.forEach((m,k)=>{ const h=idx[m[1]],a=idx[m[2]],ww=useW?w[k]:1;
+        na[h]+=ww*m[3]; da[h]+=ww*mu*ha*def[a];
+        na[a]+=ww*m[4]; da[a]+=ww*mu/ha*def[h];
+        nd[a]+=ww*m[3]; dd[a]+=ww*mu*ha*att[h];
+        nd[h]+=ww*m[4]; dd[h]+=ww*mu/ha*att[a];
+      });
+      att=att.map((_,i)=>(na[i]+K*mu*prior[i].att)/(da[i]+K*mu));
+      def=def.map((_,i)=>(nd[i]+K*mu*prior[i].def)/(dd[i]+K*mu));
+      const ma=att.reduce((s,v)=>s+v,0)/n, md=def.reduce((s,v)=>s+v,0)/n;
+      att=att.map(v=>v/ma); def=def.map(v=>v/md);
+    }
+    return {att,def};
+  };
+  const base = fit(false, state.k);      // seizoen + historie, alle duels even zwaar
+  const form = fit(true, state.k);       // met vormweging
+  // stand en vorm per team
+  const tbl = T.map(()=>({p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,last:[]}));
+  [...played].sort((a,b)=>a[0]<b[0]?-1:1).forEach(m=>{
+    const h=idx[m[1]],a=idx[m[2]];
+    const add=(i,f,g,opp,home)=>{const r=tbl[i]; r.p++; r.gf+=f; r.ga+=g; const res=f>g?"W":f===g?"G":"V"; r[res==="W"?"w":res==="G"?"d":"l"]++; r.pts+=res==="W"?3:res==="G"?1:0; r.last.push({res,txt:`${nlDate(m[0])}: ${home?m[1]+" "+f+"–"+g+" "+m[2]:m[1]+" "+g+"–"+f+" "+m[2]}`,date:m[0]});};
+    add(h,m[3],m[4],a,true); add(a,m[4],m[3],h,false);
+  });
+  const order=T.map((_,i)=>i).sort((x,y)=>tbl[y].pts-tbl[x].pts||(tbl[y].gf-tbl[y].ga)-(tbl[x].gf-tbl[x].ga)||tbl[y].gf-tbl[x].gf);
+  order.forEach((i,r)=>tbl[i].pos=r+1);
+  return {T,idx,mu,ha,prior,base,form,tbl,played,ref};
+}
+
+function absencesFor(team, dateISO){
+  const r=R, ti=r.idx[team], tm=r.tbl[ti];
+  return (DATA.absences||[]).filter(a=>a[0]===team).map(a=>{
+    const [,name,pos,wt,since,until,why]=a;
+    const active = (!since||since<=dateISO) && (!until||until>dateISO);
+    const missed = r.played.filter(m=>(m[1]===team||m[2]===team)&&m[0]>=(since||"0")).length;
+    const frac = tm.p? missed/tm.p : 0;
+    const eff = IMP[Math.max(0,Math.min(3,wt|0))]*(1-0.8*frac)*state.inj;
+    return {name,pos,wt,since,until,why,active,eff,key:team+"|"+name};
+  });
+}
+function teamStrength(team, dateISO){
+  const i=R.idx[team];
+  const abs=absencesFor(team,dateISO);
+  let la=0, ld=0;
+  abs.forEach(a=>{ const on = a.key in state.off ? !state.off[a.key] : a.active; a.on=on; if(!on) return;
+    if(a.pos==="A") la+=a.eff; else if(a.pos==="D") ld+=a.eff; else {la+=a.eff/2; ld+=a.eff/2;} });
+  la=Math.min(la,0.15); ld=Math.min(ld,0.15);
+  const adj=state.adj[team]||{att:1,def:1};
+  const att=R.form.att[i]*(1-la)*adj.att, def=R.form.def[i]*(1+ld)*adj.def;
+  return {i,att,def,la,ld,abs,adj,
+    hist:R.prior[i], season:{att:R.base.att[i],def:R.base.def[i]}, form:{att:R.form.att[i],def:R.form.def[i]}};
+}
+
+function pois(k,l){ let p=Math.exp(-l); for(let i=1;i<=k;i++) p*=l/i; return p; }
+function tau(i,j,lh,la,rho){
+  if(i===0&&j===0) return 1-lh*la*rho; if(i===0&&j===1) return 1+lh*rho;
+  if(i===1&&j===0) return 1+la*rho; if(i===1&&j===1) return 1-rho; return 1;
+}
+function nlStrength(team){
+  const adj=state.adj[team]||{att:1,def:1};
+  return {elo:(DATA.nl?.elo||{})[team]||1600, adj, group:nlGroup(team)};
+}
+function nlGroup(team){ const g=DATA.nl?.groups||{}; return Object.keys(g).find(k=>g[k].includes(team))||""; }
+function nlLambdas(home, away){
+  const H=nlStrength(home), A=nlStrength(away);
+  const dr=H.elo-A.elo+100;                 // thuisvoordeel = 100 Elo-punten
+  const T=2.5+Math.min(Math.abs(dr),600)/800, s=Math.max(-2.6,Math.min(2.6,dr/200));
+  let lh=Math.max(0.2,(T+s)/2), la=Math.max(0.2,(T-s)/2);
+  lh*=H.adj.att*A.adj.def; la*=A.adj.att*H.adj.def;
+  return {H,A,lh,la,dr};
+}
+function modelFor(home, away, date){
+  date = date || todayISO();
+  let H,A,lh,la;
+  if(state.comp==="nl"){ ({H,A,lh,la}=nlLambdas(home,away)); }
+  else { H=teamStrength(home,date); A=teamStrength(away,date); lh=R.mu*H.att*A.def*R.ha; la=R.mu*A.att*H.def/R.ha; }
+  const m=[]; let tot=0;
+  for(let i=0;i<=MAXG;i++){ m[i]=[]; for(let j=0;j<=MAXG;j++){ const p=pois(i,lh)*pois(j,la)*Math.max(0,tau(i,j,lh,la,state.rho)); m[i][j]=p; tot+=p; } }
+  for(let i=0;i<=MAXG;i++) for(let j=0;j<=MAXG;j++) m[i][j]/=tot;
+  return finish({H,A,hn:home,an:away,lh,la,m,date});
+}
+function finish(r){
+  const m=r.m; let ph=0,pd=0,pa=0,o25=0,btts=0,csH=0,csA=0,o15=0,o35=0,eh=0,ea=0; const list=[];
+  for(let i=0;i<=MAXG;i++) for(let j=0;j<=MAXG;j++){
+    const p=m[i][j];
+    if(i>j) ph+=p; else if(i===j) pd+=p; else pa+=p;
+    if(i+j>2) o25+=p; if(i+j>1) o15+=p; if(i+j>3) o35+=p;
+    if(i>0&&j>0) btts+=p; if(j===0) csH+=p; if(i===0) csA+=p;
+    eh+=i*p; ea+=j*p; list.push({i,j,p});
+  }
+  list.sort((a,b)=>b.p-a.p);
+  return Object.assign(r,{ph,pd,pa,o25,o15,o35,btts,csH,csA,list,eh,ea});
+}
+
+// ---------- Quoteringen ----------
+let MANUAL={}, ODB=null;
+const okOdds=o=>Array.isArray(o)&&o.length===3&&o.every(x=>x>1);
+function oddsFor(key){
+  const man=MANUAL[key]||{}, auto=((DATA.odds||{}).bet365||{})[key];
+  return {o711: okOdds(man["711"])?man["711"]:null, o365: okOdds(man.bet365)?man.bet365:(okOdds(auto)?auto:null), auto365: !okOdds(man.bet365)&&okOdds(auto)};
+}
+function marketFor(key){ const o=oddsFor(key); if(o.o365) return {src:"bet365",o:o.o365}; return null; }
+function implied(o){ const inv=o.map(x=>1/x), s=inv.reduce((a,b)=>a+b,0); return {q:inv.map(x=>x/s), margin:s-1}; }
+function applyMarket(r,key){
+  r.model={ph:r.ph,pd:r.pd,pa:r.pa}; r.key=key;
+  const mk=marketFor(key); r.market=mk;
+  if(!mk || !(state.mw>0)) return r;
+  const {q}=implied(mk.o), w=state.mw;
+  const t=[(1-w)*r.ph+w*q[0],(1-w)*r.pd+w*q[1],(1-w)*r.pa+w*q[2]];
+  const f=[t[0]/r.ph,t[1]/r.pd,t[2]/r.pa];
+  r.m=r.m.map((row,i)=>row.map((p,j)=>p*f[i>j?0:i===j?1:2]));
+  r.blended=true;
+  return finish(r);
+}
+function fullModel(h,a,d){ return applyMarket(modelFor(h,a,d), `${d}|${h}|${a}`); }
+function model(){ return fullModel(state.home,state.away,state.date); }
+
+// samenvatting voor tabel en advies
+function summary(r){
+  const o=[["1",r.ph],["X",r.pd],["2",r.pa]].sort((a,b)=>b[1]-a[1]);
+  let tip, tipP;
+  if(o[0][1]>=0.5){ tip=o[0][0]; tipP=o[0][1]; }
+  else if(o[0][0]==="1"){ tip="1X"; tipP=r.ph+r.pd; }
+  else if(o[0][0]==="2"){ tip="X2"; tipP=r.pa+r.pd; }
+  else { tip = r.ph>=r.pa? "1X":"X2"; tipP = r.pd+Math.max(r.ph,r.pa); }
+  const cls=o[0][0]==="1"?(i,j)=>i>j:o[0][0]==="2"?(i,j)=>i<j:(i,j)=>i===j;
+  const sc=r.list.find(s=>cls(s.i,s.j));
+  const lines=[[1.5,r.o15],[2.5,r.o25],[3.5,r.o35]];
+  const overs=lines.filter(l=>l[1]>=0.55), unders=lines.filter(l=>1-l[1]>=0.55);
+  let g,gShort,gP;
+  const f=v=>String(v).replace(".",",");
+  if(overs.length){ const l=overs[overs.length-1]; g=`Meer dan ${f(l[0])}`; gShort=`+${f(l[0])}`; gP=l[1]; }
+  else if(unders.length){ const l=unders[0]; g=`Minder dan ${f(l[0])}`; gShort=`−${f(l[0])}`; gP=1-l[1]; }
+  else { g="Rond 2,5"; gShort="±2,5"; gP=Math.max(r.o25,1-r.o25); }
+  const b=r.btts, bt=b>=0.55?"Ja":b<=0.45?"Nee":"?";
+  return {tip,tipP,best:o[0][0],sc,g,gShort,gP,lines,bt,bP:Math.max(b,1-b),index:r.lh-r.la};
+}
+
+function allFixtures(){
+  const out=[], cur=state.fk, order=COMPS.map(c=>c.k);
+  for(const k of state.sel){
+    if(CMAP[k]?.na) continue; use(k);
+    const src = state.comp==="nl" ? (DATA.nl?.fixtures||[]).filter(f=>state.league==="all"||nlGroup(f[1]).startsWith(state.league)) : (DATA.fixtures||[]).filter(f=>R.idx[f[1]]!==undefined && R.idx[f[2]]!==undefined);
+    src.forEach(f=>{ const x=f.slice(); x.k=k; x.o=order.indexOf(k); out.push(x); });
+  }
+  use(cur);
+  return out;
+}
+function weeks(){
+  const today=todayISO(), map=new Map();
+  allFixtures().filter(f=>f[0]>=today)
+    .sort((a,b)=>(a[0]+(a[3]||"")).localeCompare(b[0]+(b[3]||"")) || a.o-b.o)
+    .forEach(f=>{ const d=toD(f[0]); const mon=new Date(d.getTime()-((d.getUTCDay()+6)%7)*dayMs).toISOString().slice(0,10);
+      if(!map.has(mon)) map.set(mon,[]); map.get(mon).push(f); });
+  return [...map.entries()].map(([k,fx])=>({key:k,fx,from:fx[0][0],to:fx[fx.length-1][0]}));
+}
+function renderWeek(){
+  const W=weeks(), sel=$("weekSel");
+  if(!W.length){ sel.innerHTML='<option>Geen wedstrijden</option>'; $("tabs").innerHTML=""; $("tbl").innerHTML='<p class="none">Geen komende wedstrijden in de data.</p>'; return; }
+  if(!W.find(w=>w.key===state.week)) state.week=W[0].key;
+  const shortD=s=>toD(s).toLocaleDateString("nl-NL",{day:"numeric",month:"short"});
+  sel.innerHTML=W.map((w,i)=>`<option value="${w.key}">${shortD(w.from)}${w.to!==w.from?" – "+shortD(w.to):""} · ${w.fx.length} duels</option>`).join("");
+  sel.value=state.week;
+  const wk=W.find(w=>w.key===state.week);
+  const days=[...new Set(wk.fx.map(f=>f[0]))];
+  if(state.day!=="all" && !days.includes(state.day)) state.day="all";
+  $("tabs").innerHTML=[["all","Alle dagen"],...days.map(d=>[d,nlDate(d)])].map(([k,l])=>`<button type="button" role="tab" aria-selected="${state.day===k}" data-day="${k}">${esc(l)}</button>`).join("");
+  $("tabs").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ state.day=b.dataset.day; renderWeek(); }));
+  const shown=days.filter(d=>state.day==="all"||d===state.day);
+  const pc=p=>Math.round(p*100);
+  let html=`<div class="trow thead"><span>Tijd</span><span>Wedstrijd</span><span class="c">Index</span><span class="c">1</span><span class="c">X</span><span class="c">2</span><span class="c">Tip</span><span class="c">Uitslag</span><span class="c">Goals</span><span class="c">BTTS</span><span class="c">Odds</span></div>`;
+  const multi = state.sel.filter(k=>!CMAP[k]?.na).length>1;
+  shown.forEach(d=>{
+    html+=`<div class="tday">${esc(toD(d).toLocaleDateString("nl-NL",{weekday:"long",day:"numeric",month:"long"}))}</div>`;
+    let lastK=null;
+    wk.fx.filter(f=>f[0]===d).sort((x,y)=>multi?(x.o-y.o||(x[3]||"").localeCompare(y[3]||"")):0).forEach(f=>{
+      if(multi && f.k!==lastK){ html+=`<div class="tcomp">${esc(cFull(f.k))}</div>`; lastK=f.k; }
+      use(f.k);
+      const r=fullModel(f[1],f[2],f[0]), s=summary(r), key=f.k+"#"+f.slice(0,3).join("|"), mk=r.market;
+      const val = mk ? [r.ph,r.pd,r.pa].map((p,k)=>p*mk.o[k]-1) : null;
+      const tipK = {"1":[0],"X":[1],"2":[2],"1X":[0,1],"X2":[1,2]}[s.tip]||[];
+      const hasVal = val && tipK.some(k=>val[k]>0.03);
+      const hi=k=>s.best===k?" top":"";
+      const ix=s.index, ixc=ix>0.25?"ih":ix<-0.25?"ia":"";
+      html+=`<button type="button" class="trow${state.fixture===key?" sel":""}" data-k="${esc(key)}">
+        <span class="t num">${esc(f[3]||"")}</span>
+        <span class="m"><span class="hn">${esc(f[1])}</span><span class="an">${esc(f[2])}</span>${state.comp==="nl"?`<span class="grp">Groep ${esc(nlGroup(f[1]))}</span>`:""}</span>
+        <span class="c num ix ${ixc}" title="Verschil in verwachte goals">${ix>=0?"+":""}${ix.toFixed(2).replace(".",",")}</span>
+        <span class="c num p p1${hi("1")}"><i>1</i>${pc(r.ph)}%</span><span class="c num p px${hi("X")}"><i>X</i>${pc(r.pd)}%</span><span class="c num p p2${hi("2")}"><i>2</i>${pc(r.pa)}%</span>
+        <span class="c tip">${s.tip}${hasVal?'<sup title="Waarde volgens het model">★</sup>':""}</span>
+        <span class="c num sc">${s.sc.i}-${s.sc.j}</span>
+        <span class="c num g" title="${esc(s.g)} (${pc(s.gP)}%)">${s.gShort}</span>
+        <span class="c bt ${s.bt==="Ja"?"y":s.bt==="Nee"?"n":""}" title="Beide teams scoren ${pc(r.btts)}%">${s.bt}</span>
+        <span class="c od num">${mk?`<span class="src">b365</span>${mk.o.map((x,k)=>`<span class="${s.best===["1","X","2"][k]?"b":""}">${x.toFixed(2)}</span>`).join("")}`:'<span class="none">–</span>'}</span>
+      </button>`;
+    });
+  });
+  use(state.fk);
+  $("tbl").innerHTML=html;
+  $("tbl").querySelectorAll("button.trow").forEach(b=>b.addEventListener("click",()=>{
+    const [c,rest]=b.dataset.k.split("#"), [d,h,a]=rest.split("|"); state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=b.dataset.k; applyComp(); setStamp(LIVE); renderAll();
+    $("detail").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+  }));
+}
+
+
+function ctxPanel(el, team, S, side){
+  const t=R.tbl[S.i], last=t.last.slice(-5);
+  const histTxt=S.hist.promo? "gepromoveerd" : S.hist.rel? "gedegradeerd (sterk begin)" : S.hist.unk? "geen data vorig seizoen" : "";
+  const absOn=S.abs.filter(a=>a.on).length;
+  el.innerHTML=`
+    <h2>${esc(team)} <small>${t.pos}e · ${t.pts} pt · ${t.gf}–${t.ga}</small></h2>
+    <div><span class="label">Vorm (laatste ${last.length})</span><div class="form" style="margin-top:6px">${last.map(r=>`<span class="${r.res}" title="${esc(r.txt)}">${r.res}</span>`).join("")||'<span class="none">Nog geen duels</span>'}</div></div>
+    ${recentHTML(team, DATA.matches||[])}
+    <dl class="kv">
+      <dt class="hd">Opbouw sterkte</dt><dd class="hd">Aanval</dd><dd class="hd">Verdediging</dd>
+      <dt>Vorig seizoen</dt>${histTxt?`<dd class="num" style="grid-column:span 2">${histTxt}</dd>`:`<dd class="num">${fmt2(S.hist.att)}</dd><dd class="num">${fmt2(S.hist.def)}</dd>`}
+      <dt>+ dit seizoen</dt><dd class="num">${fmt2(S.season.att)}</dd><dd class="num">${fmt2(S.season.def)}</dd>
+      <dt>+ vorm</dt><dd class="num">${fmt2(S.form.att)}</dd><dd class="num">${fmt2(S.form.def)}</dd>
+      <dt>Blessures</dt><dd class="num">${S.la?"−"+(S.la*100).toFixed(1).replace(".",",")+"%":"–"}</dd><dd class="num">${S.ld?"+"+(S.ld*100).toFixed(1).replace(".",",")+"%":"–"}</dd>
+      ${(S.adj.att!==1||S.adj.def!==1)?`<dt>Eigen correctie</dt><dd class="num">×${fmt2(S.adj.att)}</dd><dd class="num">×${fmt2(S.adj.def)}</dd>`:""}
+      <dt class="tot">Gebruikt in model</dt><dd class="num tot">${fmt2(S.att)}</dd><dd class="num tot">${fmt2(S.def)}</dd>
+    </dl>
+    <div><span class="label">Afwezig (${absOn} meegeteld)</span></div>
+    ${S.abs.length? `<ul class="abs">${S.abs.map(a=>`
+      <li class="${a.on?"":"off"}"><label><input type="checkbox" data-k="${esc(a.key)}" ${a.on?"checked":""}>
+        <span><span class="tag">${a.pos==="A"?"AAN":a.pos==="D"?"VER":"MID"}</span>${esc(a.name)}${a.wt>=3?" ★":""}<br><span class="why">${esc(a.why)}${a.until?` · terug ${esc(nlDate(a.until))}`:" · terugkeer onbekend"}${a.active?"":" · naar verwachting fit"}</span></span>
+        <span class="imp">${a.on?"−"+(a.eff*100).toFixed(1).replace(".",",")+"%":""}</span></label></li>`).join("")}</ul>`
+      : `<p class="none">${DATA.noAbs?"Blessures worden voor deze competitie niet bijgehouden; gebruik zo nodig de eigen correctie onder Modelinstellingen.":"Geen bekende blessures of schorsingen."}</p>`}`;
+  el.querySelectorAll("input[data-k]").forEach(cb=>cb.addEventListener("change",e=>{ state.off[e.target.dataset.k]=!e.target.checked; renderAll(); }));
+}
+
+function heatColor(i,j,p,max){
+  const t=Math.pow(p/max,0.7), a=0.08+0.85*t, cs=getComputedStyle(document.documentElement);
+  const base=i>j?cs.getPropertyValue("--home"):i<j?cs.getPropertyValue("--away"):cs.getPropertyValue("--draw");
+  return {bg:`color-mix(in srgb, ${base.trim()} ${Math.round(a*100)}%, transparent)`, fg:t>0.55?"#111":"var(--ink)"};
+}
+function syncSliders(){
+  const set=(id,v,f)=>{ $(id).value=v; $(id+"o").textContent=f?f(+v):fmt2(+v); };
+  const aH=state.adj[state.home]||{att:1,def:1}, aA=state.adj[state.away]||{att:1,def:1};
+  set("aH",aH.att); set("dH",aH.def); set("aA",aA.att); set("dA",aA.def);
+  set("hl",state.hl,v=>v+" d"); set("k",state.k,v=>String(v)); set("inj",state.inj,v=>Math.round(v*100)+"%"); set("mw",state.mw,v=>Math.round(v*100)+"%"); set("rho",state.rho);
+  $("fsH").textContent="Eigen correctie · "+state.home; $("fsA").textContent="Eigen correctie · "+state.away;
+}
+
+function render(){
+  const r=model(), hn=r.hn, an=r.an;
+  $("xgH").textContent=fmt2(r.lh); $("xgA").textContent=fmt2(r.la);
+  $("topScore").textContent=r.list[0].i+"–"+r.list[0].j;
+  $("barH").style.flexGrow=r.ph; $("barD").style.flexGrow=r.pd; $("barA").style.flexGrow=r.pa;
+  $("barH").textContent=r.ph>0.09?fmtP(r.ph):""; $("barD").textContent=r.pd>0.09?fmtP(r.pd):""; $("barA").textContent=r.pa>0.09?fmtP(r.pa):"";
+  $("pH").textContent=fmtP(r.ph); $("pD").textContent=fmtP(r.pd); $("pA").textContent=fmtP(r.pa);
+  $("oH").textContent="Faire odds "+fmt2(1/r.ph); $("oD").textContent="Faire odds "+fmt2(1/r.pd); $("oA").textContent="Faire odds "+fmt2(1/r.pa);
+  $("lblH").textContent="Winst "+hn; $("lblA").textContent="Winst "+an;
+  $("capH").textContent=hn; $("capA").textContent=an;
+  $("homeName").textContent=hn; $("awayName").textContent=an; $("when").textContent=state.date?nlDate(state.date):"";
+  const fav=r.ph>=r.pa?[hn,r.ph]:[an,r.pa], gap=Math.abs(r.ph-r.pa);
+  const when = state.date? ` Kansen voor ${nlDate(state.date)}.` : "";
+  let v;
+  if(hn===an) v="Je hebt twee keer dezelfde ploeg gekozen.";
+  else if(gap<0.07) v=`Een open wedstrijd. ${hn} en ${an} ontlopen elkaar weinig; een gelijkspel zit er met ${fmtP(r.pd)} goed in.`;
+  else if(fav[1]>0.6) v=`${fav[0]} is duidelijk favoriet met ${fmtP(fav[1])} winkans.`;
+  else v=`${fav[0]} is licht favoriet met ${fmtP(fav[1])} winkans.`;
+  $("verdict").textContent=v+when+(r.blended?` Inclusief ${r.market.src}-quoteringen (model alleen: ${fmtP(r.model.ph)} / ${fmtP(r.model.pd)} / ${fmtP(r.model.pa)}).`:"");
+
+  advice(r);
+  renderH2H(r);
+  if(state.comp==="nl"){ ctxPanelNL($("ctxH"),hn,r.H); ctxPanelNL($("ctxA"),an,r.A); }
+  else { ctxPanel($("ctxH"),hn,r.H,"h"); ctxPanel($("ctxA"),an,r.A,"a"); }
+
+  const N=6, hm=$("hm"); hm.innerHTML="";
+  let max=0; for(let i=0;i<=N;i++) for(let j=0;j<=N;j++) max=Math.max(max,r.m[i][j]);
+  hm.appendChild(Object.assign(document.createElement("div"),{className:"ax"}));
+  for(let j=0;j<=N;j++) hm.appendChild(Object.assign(document.createElement("div"),{className:"ax",textContent:j}));
+  const top=r.list[0];
+  for(let i=0;i<=N;i++){
+    hm.appendChild(Object.assign(document.createElement("div"),{className:"ax",textContent:i}));
+    for(let j=0;j<=N;j++){
+      const p=r.m[i][j], c=document.createElement("div");
+      c.className="c"+(i===top.i&&j===top.j?" top":"");
+      const col=heatColor(i,j,p,max); c.style.background=col.bg; c.style.color=col.fg;
+      c.textContent=p>=0.001?(p*100).toFixed(p>=0.1?0:1).replace(".",","):"·";
+      c.title=`${hn} ${i}–${j} ${an}: ${fmtP(p)}`; hm.appendChild(c);
+    }
+  }
+  const ul=$("scores"); ul.innerHTML=""; const tmax=r.list[0].p;
+  r.list.slice(0,6).forEach(s=>{
+    const li=document.createElement("li"), col=s.i>s.j?"var(--home)":s.i<s.j?"var(--away)":"var(--draw)";
+    li.innerHTML=`<span class="sc">${s.i}–${s.j}</span><span class="track"><span class="fill" style="display:block;width:${(s.p/tmax*100).toFixed(1)}%;background:${col}"></span></span><span class="p num">${fmtP(s.p)}</span>`;
+    ul.appendChild(li);
+  });
+  const rows=[["Meer dan 1,5 goals",r.o15],["Meer dan 2,5 goals",r.o25],["Meer dan 3,5 goals",r.o35],["Beide ploegen scoren",r.btts],
+    [`${hn} houdt de nul`,r.csH],[`${an} houdt de nul`,r.csA],[`${hn} wint of gelijk`,r.ph+r.pd],[`${an} wint of gelijk`,r.pa+r.pd]];
+  $("markets").innerHTML=`<dt class="hd">Markt</dt><dd class="hd">Kans</dd><dd class="hd">Odds</dd>`+
+    rows.map(([k,p])=>`<dt>${esc(k)}</dt><dd class="num">${fmtP(p)}</dd><dd class="num o">${fmt2(1/p)}</dd>`).join("");
+  renderOdds(r);
+}
+function advice(r){
+  const hn=r.hn, an=r.an, pct=p=>Math.round(p*100)+"%";
+  const conf=p=>p>=0.65?"Sterk":p>=0.55?"Redelijk":"Twijfel";
+  const meter=p=>`<div class="conf"><span>${conf(p)}</span><div class="meter"><span style="width:${Math.round(Math.min(1,Math.max(0,(p-0.33)/0.5))*100)}%"></span></div><span class="num">${pct(p)}</span></div>`;
+  // winnaar
+  const opts=[["1",hn,r.ph],["X","Gelijkspel",r.pd],["2",an,r.pa]].sort((a,b)=>b[2]-a[2]);
+  const best=opts[0];
+  const cls = best[0]==="1"? (i,j)=>i>j : best[0]==="2"? (i,j)=>i<j : (i,j)=>i===j;
+  const sc=r.list.find(s=>cls(s.i,s.j));
+  let wPick, wP, wTxt;
+  if(best[2]>=0.5){ wPick = best[0]==="X"?"Gelijkspel":`${best[1]} wint`; wP=best[2]; wTxt=`${best[1]==="Gelijkspel"?"Gelijk":best[1]} is de duidelijkste uitkomst.`; }
+  else { const dc = best[0]==="1"||(best[0]==="X"&&r.ph>=r.pa) ? [hn, r.ph+r.pd] : [an, r.pa+r.pd];
+    wPick=`${best[0]==="X"?"Gelijk":best[1]+" wint"}`; wP=best[2];
+    wTxt=`Geen uitgesproken favoriet. Veiliger: ${dc[0]} wint of gelijk (${pct(dc[1])}).`; }
+  const S=summary(r);
+  $("advW").innerHTML=`<span class="over">Winst</span><span class="pick">${esc(wPick)}</span>${meter(wP)}
+    <div class="chipr"><span class="chip on">Tip ${S.tip} · ${pct(S.tipP)}</span></div>
+    <p>${esc(wTxt)} Voorspelde uitslag: <b style="color:var(--ink)">${sc.i}–${sc.j}</b> (${fmtP(sc.p)}).</p>`;
+  // goals
+  const exp=r.lh+r.la, lines=[[1.5,r.o15],[2.5,r.o25],[3.5,r.o35]];
+  let gPick, gP;
+  const overs=lines.filter(l=>l[1]>=0.55); const unders=lines.filter(l=>1-l[1]>=0.55);
+  if(overs.length){ const l=overs[overs.length-1]; gPick=`Meer dan ${String(l[0]).replace(".",",")}`; gP=l[1]; }
+  else if(unders.length){ const l=unders[0]; gPick=`Minder dan ${String(l[0]).replace(".",",")}`; gP=1-l[1]; }
+  else { gPick="Rond 2,5"; gP=Math.max(r.o25,1-r.o25); }
+  // meest waarschijnlijke totaal
+  const tot=Array(21).fill(0); for(let i=0;i<=MAXG;i++) for(let j=0;j<=MAXG;j++) tot[i+j]+=r.m[i][j];
+  const mode=tot.indexOf(Math.max(...tot));
+  $("advG").innerHTML=`<span class="over">Aantal goals</span><span class="pick">${esc(gPick)}</span>${meter(gP)}
+    <div class="chipr">${lines.map(l=>`<span class="chip ${gPick.includes(String(l[0]).replace(".",","))?"on":""}">o${String(l[0]).replace(".",",")} ${pct(l[1])}</span>`).join("")}</div>
+    <p>Verwacht ${fmt2(exp)} goals; meest waarschijnlijk totaal is ${mode} (${pct(tot[mode])}).</p>`;
+  // btts
+  const b=r.btts, bPick=b>=0.55?"Ja":b<=0.45?"Nee":"Twijfel", bP=Math.max(b,1-b);
+  const weak = r.lh<r.la? hn : an;
+  $("advB").innerHTML=`<span class="over">Beide teams scoren</span><span class="pick">${bPick}</span>${meter(bP)}
+    <div class="chipr"><span class="chip ${b>=0.5?"on":""}">Ja ${pct(b)}</span><span class="chip ${b<0.5?"on":""}">Nee ${pct(1-b)}</span></div>
+    <p>${bPick==="Nee"?`Grootste risico: ${esc(weak)} blijft op nul (${pct(weak===hn?r.csA:r.csH)}).`:`${esc(hn)} scoort ${pct(1-r.csA)}, ${esc(an)} scoort ${pct(1-r.csH)}.`}</p>`;
+}
+// ---------- Laatste wedstrijden ----------
+function recentHTML(team, matches){
+  const compName = state.comp==="nl" ? "Nations League" : cName(state.fk);
+  const map=new Map();
+  ((DATA.recent||{})[team]||[]).forEach(m=>map.set(m[0],m));
+  (DATA.prevMatches||[]).filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(m[0],[m[0],m[1],m[2],m[3],m[4],compName+" 25/26"]));
+  matches.filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(m[0],[m[0],m[1],m[2],m[3],m[4],compName]));
+  const list=[...map.values()].sort((a,b)=>a[0]<b[0]?1:-1).slice(0,25);
+  if(!list.length) return "";
+  const open=!!state.more[state.comp+"|"+team], N=5, shown=open?list:list.slice(0,N);
+  const rows=shown.map(m=>{
+    const home=m[1]===team, opp=home?m[2]:m[1], f=home?m[3]:m[4], g=home?m[4]:m[3];
+    const res=f>g?"W":f===g?"G":"V";
+    return `<li><span class="num d">${esc(toD(m[0]).toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"2-digit"}))}</span><span class="ha">${home?"T":"U"}</span><span class="op">${esc(opp)}<small>${esc(m[5]||"")}</small></span><b class="num">${m[3]}–${m[4]}</b><span class="res ${res}">${res}</span></li>`;
+  }).join("");
+  let w=0,dr=0,l=0; list.forEach(m=>{const home=m[1]===team,f=home?m[3]:m[4],g=home?m[4]:m[3]; if(f>g)w++; else if(f===g)dr++; else l++;});
+  const btn = list.length>N ? `<button type="button" class="textbtn more" data-more="${esc(state.comp+"|"+team)}" aria-expanded="${open}">${open?"Minder tonen":`Bekijk meer (${list.length-N})`}</button>` : "";
+  return `<div class="recent"><span class="label">Laatste ${list.length} wedstrijden · ${w}W ${dr}G ${l}V</span><ul>${rows}</ul>${btn}</div>`;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button.more"); if(!b) return;
+  const k=b.dataset.more; state.more[k]=!state.more[k]; render();
+});
+
+// ---------- Nations League context ----------
+function nlTable(group){
+  const teams=(DATA.nl?.groups||{})[group]||[], t=Object.fromEntries(teams.map(x=>[x,{p:0,pts:0,gf:0,ga:0,last:[]}]));
+  [...(DATA.nl?.matches||[])].sort((a,b)=>a[0]<b[0]?-1:1).forEach(m=>{
+    const add=(me,f,g,txt)=>{ const r=t[me]; if(!r) return; r.p++; r.gf+=f; r.ga+=g; const res=f>g?"W":f===g?"G":"V"; r.pts+=res==="W"?3:res==="G"?1:0; r.last.push({res,txt}); };
+    const txt=`${nlDate(m[0])}: ${m[1]} ${m[3]}–${m[4]} ${m[2]}`;
+    add(m[1],m[3],m[4],txt); add(m[2],m[4],m[3],txt);
+  });
+  const order=teams.slice().sort((a,b)=>t[b].pts-t[a].pts||(t[b].gf-t[b].ga)-(t[a].gf-t[a].ga)||t[b].gf-t[a].gf);
+  order.forEach((x,i)=>t[x].pos=i+1);
+  return {t,order};
+}
+function ctxPanelNL(el, team, S){
+  const {t,order}=nlTable(S.group), me=t[team]||{p:0,pts:0,gf:0,ga:0,last:[],pos:"–"};
+  const last=me.last.slice(-5);
+  el.innerHTML=`
+    <h2>${esc(team)} <small>Groep ${esc(S.group)} · ${me.pos}e · ${me.pts} pt</small></h2>
+    <div><span class="label">Vorm Nations League</span><div class="form" style="margin-top:6px">${last.map(r=>`<span class="${r.res}" title="${esc(r.txt)}">${r.res}</span>`).join("")||'<span class="none">Nog geen duels</span>'}</div></div>
+    ${recentHTML(team, DATA.nl?.matches||[])}
+    <dl class="kv">
+      <dt class="hd">Sterkte</dt><dd class="hd"></dd><dd class="hd">Waarde</dd>
+      <dt>Elo-rating</dt><dd></dd><dd class="num">${S.elo}</dd>
+      ${(S.adj.att!==1||S.adj.def!==1)?`<dt>Eigen correctie</dt><dd class="num">×${fmt2(S.adj.att)}</dd><dd class="num">×${fmt2(S.adj.def)}</dd>`:""}
+    </dl>
+    <div><span class="label">Stand groep ${esc(S.group)}</span></div>
+    <dl class="kv">${order.map(x=>`<dt style="${x===team?"color:var(--ink);font-weight:500":""}">${t[x].pos}. ${esc(x)}</dt><dd class="num">${t[x].gf}–${t[x].ga}</dd><dd class="num">${t[x].pts} pt</dd>`).join("")}</dl>
+    <p class="none">Blessures en schorsingen van nationale teams worden niet bijgehouden; gebruik zo nodig de eigen correctie onder Modelinstellingen.</p>`;
+}
+
+// ---------- Onderlinge duels ----------
+function h2hFor(a,b){
+  const key=[a,b].sort().join("|"), list=((DATA.h2h||{})[key]||[]).map(x=>x.slice());
+  const cn=cName(state.fk);
+  const extra = state.comp==="nl" ? (DATA.nl?.matches||[]).map(m=>[...m,"Nations League"]) : [...(DATA.matches||[]).map(m=>[...m,cn]), ...(DATA.prevMatches||[]).map(m=>[...m,cn+" 25/26"])];
+  extra.filter(m=>(m[1]===a&&m[2]===b)||(m[1]===b&&m[2]===a)).forEach(m=>{ if(!list.some(x=>x[0]===m[0])) list.push(m); });
+  return list.sort((x,y)=>x[0]<y[0]?1:-1).slice(0,6);
+}
+function renderH2H(r){
+  const hn=r.hn, an=r.an, L=h2hFor(hn,an);
+  const pc=p=>Math.round(p*100)+"%";
+  if(!L.length){
+    $("h2hList").innerHTML='<p class="none">Geen recente onderlinge duels gevonden.</p>';
+    $("h2hPred").innerHTML='<span class="over">Voorspelling op basis van h2h</span><p>Niet genoeg onderlinge duels voor een aparte voorspelling. Gebruik het model hierboven.</p>';
+    return;
+  }
+  let w=0,d=0,l=0, sw=0, gf=0, ga=0;
+  const rows=L.map((m,k)=>{
+    const homeIsH=m[1]===hn, f=homeIsH?m[3]:m[4], g=homeIsH?m[4]:m[3];
+    const res=f>g?"W":f===g?"G":"V"; if(res==="W")w++; else if(res==="G")d++; else l++;
+    const wt=Math.pow(0.8,k); sw+=wt; gf+=wt*f; ga+=wt*g;
+    return `<li><span class="num d">${esc(toD(m[0]).toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"}))}</span>
+      <span class="mt"><span class="${m[1]===hn?"hc":"ac"}">${esc(m[1])}</span> <b class="num">${m[3]}–${m[4]}</b> <span class="${m[2]===hn?"hc":"ac"}">${esc(m[2])}</span></span>
+      <span class="cp">${esc(m[5]||"")}</span><span class="res ${res}" title="Uitslag voor ${esc(hn)}">${res}</span></li>`;
+  }).join("");
+  // voorspelling: gewogen gemiddelde goals per ploeg in onderlinge duels, licht richting gemiddelde getrokken
+  const base = state.comp==="nl"?1.25:1.5;
+  const lh=Math.max(0.2,(gf+base)/(sw+1)), la=Math.max(0.2,(ga+base)/(sw+1));
+  const m=[]; let tot=0, ph=0,pd=0,pa=0,o25=0,bt=0; let best={i:0,j:0,p:0};
+  for(let i=0;i<=MAXG;i++) for(let j=0;j<=MAXG;j++){ const p=pois(i,lh)*pois(j,la); tot+=p; if(p>best.p) best={i,j,p}; }
+  for(let i=0;i<=MAXG;i++) for(let j=0;j<=MAXG;j++){ const p=pois(i,lh)*pois(j,la)/tot; if(i>j)ph+=p; else if(i===j)pd+=p; else pa+=p; if(i+j>2)o25+=p; if(i>0&&j>0)bt+=p; }
+  const top=[["1",ph],["X",pd],["2",pa]].sort((a,b)=>b[1]-a[1])[0];
+  const agree = top[0]===summary(r).best;
+  $("h2hList").innerHTML=`<div class="rec"><span class="W">${w} W</span><span class="G">${d} G</span><span class="V">${l} V</span><span class="none">voor ${esc(hn)}, laatste ${L.length}</span></div><ul>${rows}</ul>`;
+  $("h2hPred").innerHTML=`<span class="over">Voorspelling op basis van h2h</span>
+    <span class="pick">${best.i}–${best.j}</span>
+    <div class="chipr"><span class="chip ${top[0]==="1"?"on":""}">1 ${pc(ph)}</span><span class="chip ${top[0]==="X"?"on":""}">X ${pc(pd)}</span><span class="chip ${top[0]==="2"?"on":""}">2 ${pc(pa)}</span></div>
+    <div class="chipr"><span class="chip">+2,5 ${pc(o25)}</span><span class="chip">BTTS ${pc(bt)}</span></div>
+    <p>Gemiddeld (recent zwaarder) ${fmt2(lh)} – ${fmt2(la)} goals. ${agree?"Dit bevestigt het model.":"Let op: dit wijkt af van het model, dat "+(summary(r).best==="1"?hn+" wint":summary(r).best==="2"?an+" wint":"gelijk")+" als meest waarschijnlijk ziet."} Onderlinge duels zijn een kleine steekproef en tellen niet mee in de hoofdvoorspelling.</p>`;
+}
+function renderOdds(r){
+  const key=r.key, o=oddsFor(key), hn=r.hn, an=r.an, M=r.model;
+  const lab=["1 · "+hn,"X · Gelijk","2 · "+an], fin=[r.ph,r.pd,r.pa], mod=[M.ph,M.pd,M.pa];
+  const cell=(src,odds,k,auto)=>{
+    const v=odds?odds[k]:"";
+    const ev=odds? fin[k]*odds[k]-1 : null;
+    return `<span class="oc2"><input type="number" step="0.01" min="1.01" inputmode="decimal" data-src="${src}" data-k="${k}" value="${v?v.toFixed(2):""}" placeholder="–" aria-label="${src} ${lab[k]}">
+      ${ev!==null?`<small class="${ev>0.03?"pos":"neg"}">${ev>=0?"+":""}${(ev*100).toFixed(0)}%</small>`:"<small class='neg'>&nbsp;</small>"}</span>`;
+  };
+  const mg=()=>{ const x=o.o365; return x? (implied(x).margin*100).toFixed(1).replace(".",",")+"%":"–"; };
+  $("otbl").innerHTML=`<div class="orow ohead"><span></span><span class="c">Model</span><span class="c">Eindkans</span><span class="c">Faire odds</span><span class="c">bet365</span></div>`+
+    [0,1,2].map(k=>`<div class="orow"><span class="ol">${esc(lab[k])}</span><span class="c num">${fmtP(mod[k])}</span><span class="c num b">${fmtP(fin[k])}</span><span class="c num">${fmt2(1/fin[k])}</span>${cell("bet365",o.o365,k,o.auto365)}</div>`).join("")+
+    `<div class="orow ofoot"><span class="ol">Marge bookmaker</span><span></span><span></span><span></span><span class="c num">${mg()}</span></div>`;
+  const used = r.market? `Eindkans = ${Math.round((1-state.mw)*100)}% model + ${Math.round(state.mw*100)}% ${r.market.src} (zonder marge).` : "Nog geen quoteringen voor deze wedstrijd: eindkans = model.";
+  $("oddsNote").textContent = `${used} Het percentage onder een quotering is de verwachte waarde: positief betekent dat de eindkans hoger is dan de quotering suggereert. ${o.auto365?"bet365 automatisch opgehaald ("+nlDate((DATA.odds||{}).updated||todayISO())+"); ":""}je kunt de quoteringen zelf aanpassen als ze veranderd zijn.`;
+  $("otbl").querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
+    const src=inp.dataset.src, vals=[...$("otbl").querySelectorAll(`input[data-src="${src}"]`)].map(x=>parseFloat(String(x.value).replace(",",".")));
+    const cur={...(MANUAL[key]||{})};
+    if(vals.every(x=>x>1)) cur[src]=vals.map(x=>Math.round(x*100)/100);
+    else if(vals.every(x=>!(x>0))) delete cur[src];
+    else { $("oddsSave").textContent="Vul alle drie de quoteringen in"; return; }
+    MANUAL={...MANUAL,[key]:cur}; saveManual(); renderAll();
+  }));
+}
+let saveT=null;
+function saveManual(){
+  if(!ODB){ $("oddsSave").textContent="Alleen deze sessie (niet opgeslagen)"; return; }
+  $("oddsSave").textContent="Opslaan…"; clearTimeout(saveT);
+  saveT=setTimeout(async()=>{ try{ await ODB.doc("odds/manual").set({odds:MANUAL,updated:new Date().toISOString()}); $("oddsSave").textContent="Opgeslagen"; }
+    catch(e){ $("oddsSave").textContent="Opslaan mislukt"; } },600);
+}
+function renderAll(){ use(state.fk); syncSliders(); renderWeek(); use(state.fk); render(); }
+
+function setStamp(live){
+  $("dot").className="dot"+(live?" live":"");
+  const upd=DATA.updated? nlDate(DATA.updated) : "onbekend";
+  const src = state.comp==="nl"||state.comp==="ere" ? "" : ` · ${DATA.source||""}`;
+  const last=R.ref? nlDate(R.ref):"–";
+  $("stamp").textContent = state.comp==="nl"
+    ? `${live?"Live data":"Ingebouwde data"} · bijgewerkt ${upd} · Elo-ratings + Nations League`
+    : `${live?"Live data":"Ingebouwde data"} · ${cName(state.fk)} bijgewerkt ${upd} · t/m duels van ${last}${src}`;
+}
+let LIVE=false;
+function pickDefault(force){
+  if(!state.sel.includes(state.fk)) force=true;
+  use(state.fk);
+  const known = state.comp==="nl" ? (t=>!!(DATA.nl?.elo||{})[t]) : (t=>R.idx[t]!==undefined);
+  if(!force && state.home && known(state.home) && known(state.away)) return;
+  const W=weeks(); const f=W.length? W[0].fx[0] : null;
+  if(f){ state.fk=f.k; use(f.k); state.home=f[1]; state.away=f[2]; state.date=f[0]; state.fixture=f.k+"#"+f.slice(0,3).join("|"); state.week=W[0].key; state.day="all"; }
+  else { const k=state.sel.find(x=>!x.startsWith("nl:")&&!CMAP[x]?.na)||"ere"; state.fk=k; use(k); state.home=R.T[0]; state.away=R.T[1]; state.date=null; state.fixture=null; }
+}
+function applyComp(){
+  use(state.fk);
+  const nl=state.comp==="nl", act=state.sel.filter(k=>!CMAP[k]?.na);
+  const sum = act.length===1? cFull(act[0]) : `${act.length} competities`;
+  $("compTitle").textContent = sum;
+  $("compSum").textContent = sum;
+  $("appsub").textContent = nl ? `Internationaal · ${cName(state.fk)} 2026/27 · Elo-sterkte, vorm en onderlinge duels` : `${cFull(state.fk)} 2026/27 · seizoen, historie, vorm${DATA.noAbs?"":" en blessures"}`;
+  document.querySelectorAll(".ere-only").forEach(e=>e.hidden=nl);
+  $("compList").querySelectorAll("input").forEach(i=>i.checked=state.sel.includes(i.value));
+}
+function refresh(force){ pickDefault(force); applyComp(); setStamp(LIVE); renderAll(); }
+function loadData(d, live){
+  MAIN=d; delete RC.ere; LIVE=live||LIVE; refresh(false);
+}
+function loadLeague(k, d, live){
+  LG[k]=d; delete RC[k]; LIVE=live||LIVE; refresh(false);
+}
+function buildCompList(){
+  let html=`<div class="msbtns"><button type="button" data-all="1">Alles</button><button type="button" data-all="0">Alleen Eredivisie</button></div>`, last="";
+  COMPS.forEach(c=>{
+    if(c.c!==last){ html+=`<div class="msg">${esc(c.c)}</div>`; last=c.c; }
+    html+= c.na ? `<label class="na"><input type="checkbox" disabled value="${c.k}">${esc(c.c+" · "+c.n)}<small>geen databron</small></label>`
+                : `<label><input type="checkbox" value="${c.k}">${esc(c.c+" · "+c.n)}</label>`;
+  });
+  $("compList").innerHTML=html;
+  const save=()=>{ try{ localStorage.setItem("wk_sel",JSON.stringify(state.sel)); }catch(e){} };
+  $("compList").addEventListener("change",e=>{
+    const i=e.target; if(!i.matches("input")) return;
+    const s=new Set(state.sel); i.checked? s.add(i.value) : s.delete(i.value);
+    if(!s.size){ i.checked=true; return; }
+    state.sel=COMPS.map(c=>c.k).filter(k=>s.has(k)); state.week=null; save(); refresh(false);
+  });
+  $("compList").addEventListener("click",e=>{
+    const b=e.target.closest("button[data-all]"); if(!b) return;
+    state.sel = b.dataset.all==="1"? COMPS.filter(c=>!c.na).map(c=>c.k) : ["ere"];
+    state.week=null; save(); refresh(false);
+  });
+  document.addEventListener("click",e=>{ const d=$("compMs"); if(d.open && !d.contains(e.target)) d.open=false; });
+  try{ const v=JSON.parse(localStorage.getItem("wk_sel")||"null"); if(Array.isArray(v)){ const ok=v.filter(k=>CMAP[k]&&!CMAP[k].na); if(ok.length) state.sel=ok; } }catch(e){}
+}
+
+function bind(){
+  $("weekSel").addEventListener("change",e=>{ state.week=e.target.value; state.day="all"; renderWeek(); });
+  buildCompList();
+  const adj=(side,field)=>e=>{ const t=side==="H"?state.home:state.away; state.adj[t]={...(state.adj[t]||{att:1,def:1}),[field]:+e.target.value}; syncSliders(); render(); };
+  $("aH").addEventListener("input",adj("H","att")); $("dH").addEventListener("input",adj("H","def"));
+  $("aA").addEventListener("input",adj("A","att")); $("dA").addEventListener("input",adj("A","def"));
+  const glob=(id,key,refit)=>$(id).addEventListener("input",e=>{ state[key]=+e.target.value; if(refit){ RC={}; use(state.fk); } renderAll(); });
+  glob("hl","hl",true); glob("k","k",true); glob("inj","inj",false); glob("rho","rho",false); glob("mw","mw",false);
+  $("reset").addEventListener("click",()=>{ Object.assign(state,DEF); state.adj={}; state.off={}; RC={}; use(state.fk); renderAll(); });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",render);
+  new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+}
+
+bind(); loadData(EMBEDDED,false);
+const LEAGUE_KEYS = COMPS.filter(c=>!c.na && dataKey(c.k)!=="main").map(c=>c.k);
+
+(async()=>{
+  try{
+    const db = await window.claude?.use?.("db");
+    if(!db) return;
+    ODB=db;
+    db.doc("odds/manual").onSnapshot(s=>{
+      const d=s.exists? s.data() : null; if(!d||typeof d.odds!=="object") return;
+      MANUAL=JSON.parse(JSON.stringify(d.odds));
+      if(!document.activeElement || !document.getElementById("otbl").contains(document.activeElement)) renderAll();
+    },()=>{});
+    db.doc("model/current").onSnapshot(s=>{
+      if(!s.exists) return;
+      const d=s.data();
+      if(valid(d) && (d.updated||"")>=(EMBEDDED.updated||"")) loadData(JSON.parse(JSON.stringify(d)),true);
+    },()=>{});
+    LEAGUE_KEYS.forEach(k=>db.doc("leagues/"+k).onSnapshot(s=>{
+      if(!s.exists) return;
+      const d=s.data();
+      if(valid(d) && (d.updated||"")>=((EMB_L[k]||{}).updated||"")) loadLeague(k, JSON.parse(JSON.stringify(d)), true);
+    },()=>{}));
+  }catch(e){}
+})();
+</script>
