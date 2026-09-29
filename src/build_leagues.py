@@ -25,7 +25,12 @@ META = {
   "es2": {"name": "LaLiga 2", "country": "Spanje", "fc": "es2", "prevof": "es.2", "tz": 0, "up": "es.1", "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "it2": {"name": "Serie B", "country": "Italië", "fc": "it2", "prevof": "it.2", "tz": 0, "up": "it.1", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "dk1": {"name": "Superliga", "country": "Denemarken", "fc": "dk1", "tz": 0, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
-  "se1": {"name": "Allsvenskan", "country": "Zweden", "fc": "se1", "tz": 0, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "se1": {"name": "Allsvenskan", "country": "Zweden", "fc": "se1", "tz": 0, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com", "season": "2026"},
+  "pl1": {"name": "Ekstraklasa", "country": "Polen", "fc": "pl1", "tz": 0, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "no1": {"name": "Eliteserien", "country": "Noorwegen", "fc": "no1", "tz": 0, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com", "season": "2026"},
+  "at1": {"name": "Bundesliga", "country": "Oostenrijk", "fc": "at1", "tz": 0, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "tr1": {"name": "Süper Lig", "country": "Turkije", "fc": "tr1", "tz": 0, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "ch1": {"name": "Super League", "country": "Zwitserland", "fc": "ch1", "tz": 0, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "fr1": {"name": "Ligue 1", "country": "Frankrijk", "of": "fr.1", "tz": 0, "up": None, "down": "fr.2"},
   "pt1": {"name": "Liga Portugal", "country": "Portugal", "of": "pt.1", "tz": 1, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
   "nl2": {"name": "Keuken Kampioen Divisie", "country": "Nederland", "fc": "nl.2", "tz": 0, "up": "ere", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
@@ -91,6 +96,15 @@ NAMES = {
   "Aarhus": "AGF", "Odense": "OB", "Horsens": "AC Horsens", "Sonderjyske": "SønderjyskE",
   "Goteborg": "Göteborg", "Hacken": "Häcken", "Malmo FF": "Malmö FF", "Djurgarden": "Djurgården", "Mjallby": "Mjällby",
   "Vasteras SK": "Västerås SK", "Orgryte": "Örgryte",
+  # Polen / Oostenrijk / Noorwegen / Turkije / Zwitserland (BetExplorer-namen)
+  "Legia": "Legia Warszawa", "Wisla": "Wisła Kraków", "Wisla Plock": "Wisła Płock", "Widzew Lodz": "Widzew Łódź", "Lech Poznan": "Lech Poznań",
+  "Gornik Zabrze": "Górnik Zabrze", "Slask Wroclaw": "Śląsk Wrocław", "Pogon Szczecin": "Pogoń Szczecin", "Rakow": "Raków Częstochowa",
+  "Zaglebie": "Zagłębie Lubin", "Wieczysta Krakow": "Wieczysta Kraków", "Jagiellonia": "Jagiellonia Białystok",
+  "A. Lustenau": "Austria Lustenau", "Austria Vienna": "Austria Wien", "SK Rapid": "Rapid Wien", "Salzburg": "RB Salzburg", "Tirol": "WSG Tirol", "Ried": "SV Ried",
+  "Bodo/Glimt": "Bodø/Glimt", "Valerenga": "Vålerenga", "Tromso": "Tromsø", "Lillestrom": "Lillestrøm",
+  "Besiktas": "Beşiktaş", "Fenerbahce": "Fenerbahçe", "Basaksehir": "Başakşehir", "Kasimpasa": "Kasımpaşa", "Goztepe": "Göztepe",
+  "Genclerbirligi": "Gençlerbirliği", "Eyupspor": "Eyüpspor", "Corum": "Çorum FK", "Rizespor": "Çaykur Rizespor", "Gaziantep": "Gaziantep FK",
+  "Zurich": "FC Zürich",
   # Eredivisie vorig seizoen (voor degradanten KKD)
   "Heracles Almelo": "Heracles", "NAC Breda": "NAC", "FC Volendam": "Volendam",
 }
@@ -172,7 +186,7 @@ def of_prev(code):
 
 # ---------- bet365 ----------
 def norm(s):
-    s = s.replace("æ", "ae").replace("Æ", "Ae").replace("ø", "o").replace("Ø", "O")
+    s = s.replace("ı", "i").replace("ł", "l").replace("Ł", "L").replace("æ", "ae").replace("Æ", "Ae").replace("ø", "o").replace("Ø", "O")
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
     s = s.replace("man utd", "manchester united").replace("man city", "manchester city").replace("nottm", "nottingham")
     s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach")
@@ -182,6 +196,7 @@ def norm(s):
     s = s.replace("sporting lisbon", "sporting cp").replace("benfica lisbon", "benfica").replace("vitoria sc guimaraes", "vitoria guimaraes").replace("hertha bsc berlin", "hertha")
     s = s.replace("fc copenhagen", "fc kobenhavn").replace("copenhagen", "kobenhavn").replace("agf aarhus", "agf").replace("vasteraas", "vasteras").replace("malmo ff", "malmo").replace("sonderjyske", "sonderjyske")
     s = s.replace("alto adige", "sudtirol").replace("nancy-lorraine", "nancy").replace("red star 93", "red star").replace("real sociedad san sebastian b", "real sociedad b").replace("clermont foot", "clermont")
+    s = s.replace("vienna", "wien").replace("lask linz", "lask").replace("wsg swarovski tirol", "wsg tirol").replace("kristiansund bk", "kristiansund").replace("sk brann", "brann").replace("sk sturm", "sturm")
     s = s.replace("psg", "paris sg").replace("paris saint-germain", "paris sg").replace("a coruna", "la coruna")
     s = re.sub(r"\b(fc|afc|cf|sc|ac|as|club|de|calcio|tsg|vfl|vfb|sv|1\.|the)\b", " ", s)
     return re.sub(r"[^a-z ]", " ", s).split()
@@ -326,7 +341,7 @@ def main():
             odds = {k: v for k, v in (old.get("odds", {}).get("bet365") or {}).items() if k in keep}
         doc = {
             "code": code, "name": M["name"], "country": M["country"], "updated": TODAY,
-            "season": "2026/27", "teams": teams, "prev": prev, "rel": rel, "noPrev": not prevm,
+            "season": M.get("season", "2026/27"), "teams": teams, "prev": prev, "rel": rel, "noPrev": not prevm,
             "matches": sorted(played), "prevMatches": sorted(prevm or []), "fixtures": fx,
             "absences": [], "noAbs": True,
             "odds": {"bet365": odds, "updated": TODAY if odds else None, "source": M.get("osrc", "bet365"), "label": M.get("olabel", "bet365")},
