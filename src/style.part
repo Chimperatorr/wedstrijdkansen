@@ -369,3 +369,10 @@ body{padding-bottom:96px}
 .tday.tog:hover{background:rgba(255,255,255,.04)}
 .tday.tog:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
 .tday.tog small{white-space:nowrap} .tday.tog span{min-width:0}
+.cbcombi{background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.cbcombi ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:.84rem}
+.cbcombi li{display:flex;justify-content:space-between;gap:10px}
+.cbcombi li b{font-family:var(--mono);font-weight:500}
+.cbsum{display:grid;grid-template-columns:1fr auto;gap:0 10px;border-top:1px solid var(--line);padding-top:6px}
+.cbsum span{font-weight:500} .cbsum b{font-family:var(--mono);color:var(--secondary);font-size:1.05rem}
+.cbsum small{grid-column:1/-1;color:var(--muted);font-size:.76rem}
