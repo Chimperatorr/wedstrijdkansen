@@ -351,3 +351,13 @@ body{padding-bottom:96px}
 .trow .sc.fin b{color:var(--ink);font-weight:700}
 .trow .sc.fin small{font-size:.66rem;color:var(--faint)}
 .trow sup.hit{color:var(--secondary)} .trow sup.miss{color:#CF6679}
+/* inklapbare kopjes in de analyse */
+.dwrap .panel h2.tog{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px}
+.dwrap .panel h2.tog::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;flex:0 0 auto}
+.dwrap .panel.collapsed h2.tog::after{transform:rotate(-45deg)}
+.dwrap .panel h2.tog:focus-visible{outline:2px solid var(--primary);outline-offset:4px;border-radius:2px}
+.dwrap .panel.collapsed > *:not(h2):not(:has(h2)){display:none}
+.dwrap .panel.collapsed{gap:0}
+.dwrap .panel.collapsed .wkhead > *:not(h2){display:none}
+.dwrap .panel h2.tog small{margin-left:6px}
+.dwrap .ctx,.dwrap .grid2{align-items:start}

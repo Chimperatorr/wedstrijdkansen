@@ -353,6 +353,16 @@ body{padding-bottom:96px}
 .trow .sc.fin b{color:var(--ink);font-weight:700}
 .trow .sc.fin small{font-size:.66rem;color:var(--faint)}
 .trow sup.hit{color:var(--secondary)} .trow sup.miss{color:#CF6679}
+/* inklapbare kopjes in de analyse */
+.dwrap .panel h2.tog{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px}
+.dwrap .panel h2.tog::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;flex:0 0 auto}
+.dwrap .panel.collapsed h2.tog::after{transform:rotate(-45deg)}
+.dwrap .panel h2.tog:focus-visible{outline:2px solid var(--primary);outline-offset:4px;border-radius:2px}
+.dwrap .panel.collapsed > *:not(h2):not(:has(h2)){display:none}
+.dwrap .panel.collapsed{gap:0}
+.dwrap .panel.collapsed .wkhead > *:not(h2){display:none}
+.dwrap .panel h2.tog small{margin-left:6px}
+.dwrap .ctx,.dwrap .grid2{align-items:start}
 </style></head><body>
 
 <header class="appbar"><div class="in">
@@ -870,7 +880,26 @@ function render(){
   $("markets").innerHTML=`<dt class="hd">Markt</dt><dd class="hd">Kans</dd><dd class="hd">Odds</dd>`+
     rows.map(([k,p])=>`<dt>${esc(k)}</dt><dd class="num">${fmtP(p)}</dd><dd class="num o">${fmt2(1/p)}</dd>`).join("");
   renderOdds(r);
+  markHeads();
 }
+// ---------- inklapbare kopjes ----------
+let COLL={}; try{ COLL=JSON.parse(localStorage.getItem("wk_coll")||"{}")||{}; }catch(e){}
+const panKey=p=>p.id||p.getAttribute("aria-label")||"";
+function markHeads(){
+  document.querySelectorAll("#detailWrap .panel").forEach(p=>{
+    const h=p.querySelector("h2"); if(!h) return;
+    const k=panKey(p), c=!!COLL[k];
+    p.classList.toggle("collapsed",c);
+    h.classList.add("tog"); h.tabIndex=0; h.setAttribute("role","button"); h.setAttribute("aria-expanded",String(!c));
+  });
+}
+function togglePanel(h){
+  const p=h.closest(".panel"), k=panKey(p); COLL[k]=!COLL[k]; if(!COLL[k]) delete COLL[k];
+  try{ localStorage.setItem("wk_coll",JSON.stringify(COLL)); }catch(e){}
+  markHeads();
+}
+document.addEventListener("click",e=>{ const h=e.target.closest("#detailWrap .panel h2.tog"); if(h) togglePanel(h); });
+document.addEventListener("keydown",e=>{ const h=e.target.closest?.("#detailWrap .panel h2.tog"); if(h&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); togglePanel(h); } });
 function advice(r){
   const hn=r.hn, an=r.an, pct=p=>Math.round(p*100)+"%";
   const conf=p=>p>=0.65?"Sterk":p>=0.55?"Redelijk":"Twijfel";
