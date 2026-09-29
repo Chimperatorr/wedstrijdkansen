@@ -15,7 +15,7 @@
 const $c=id=>document.getElementById(id);
 let SAMPLE=null, busy=null, turns=[];
 const CHIPS=["Beste bets deze week","Top 10 zekerste","Beste bets dit weekend","Lijst over 2,5 goals","BTTS-lijst","Value bets"];
-const ALIAS=[["ere",/eredivisie/],["nl2",/kkd|keuken|eerste divisie|kampioen divisie/],["en1",/premier league|engeland|epl/],["en2",/championship/],["es2",/(la ?liga ?2|segunda|laliga2)/],["es1",{test:q=>/spanje|spaans/.test(q)||/la ?liga/.test(q.replace(/la ?liga ?2|laliga2/g,""))}],["it2",/serie b/],["it1",/serie a|itali/],["de2",/2\.? ?bundesliga|tweede bundesliga/],["de1",{test:q=>/duitsland|duits/.test(q)||/bundesliga/.test(q.replace(/(2\.? ?|tweede )bundesliga/g,""))}],["fr2",/ligue 2/],["fr1",/ligue 1|frankrijk|frans/],["pt1",/portugal|liga portugal|portugees/],["be1",/pro league|belgi/],["nl:all",/nations league|interland|landen/]];
+const ALIAS=[["ere",/eredivisie/],["nl2",/kkd|keuken|eerste divisie|kampioen divisie/],["en1",/premier league|engeland|epl/],["en2",/championship/],["es2",/(la ?liga ?2|segunda|laliga2)/],["es1",{test:q=>/spanje|spaans/.test(q)||/la ?liga/.test(q.replace(/la ?liga ?2|laliga2/g,""))}],["it2",/serie b/],["it1",/serie a|itali/],["de2",/2\.? ?bundesliga|tweede bundesliga/],["de1",{test:q=>/duitsland|duits/.test(q)||/bundesliga/.test(q.replace(/(2\.? ?|tweede )bundesliga/g,""))}],["fr2",/ligue 2/],["fr1",/ligue 1|frankrijk|frans/],["pt1",/portugal|liga portugal|portugees/],["be1",/pro league|belgi/],["dk1",/superliga|denemarken|deens/],["se1",/allsvenskan|zweden|zweeds/],["nl:all",/nations league|interland|landen/]];
 const DAYS={maandag:1,dinsdag:2,woensdag:3,donderdag:4,vrijdag:5,zaterdag:6,zondag:0};
 const pc=p=>Math.round(p*100)+"%", od=x=>x.toFixed(2);
 const shortD=s=>toD(s).toLocaleDateString("nl-NL",{weekday:"short",day:"numeric",month:"short"});
@@ -101,7 +101,7 @@ function local(qRaw){
     const pk=v=>v.k===0?v.x.h+" wint":v.k===2?v.x.a+" wint":"Gelijk "+v.x.h+"–"+v.x.a;
     rows=list.map(v=>fmtItem(v.x, v.k===0?v.x.h+" wint":v.k===2?v.x.a+" wint":"Gelijkspel", v.p, v.odd, `EV ${v.ev>=0?"+":""}${Math.round(v.ev*100)}%`));
     rows.push(combi(list.map(v=>({label:`${v.x.h} – ${v.x.a}: ${["1","X","2"][v.k]}`,p:v.p,odd:v.odd}))));
-    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans komt alleen uit het model; de quoteringen dienen alleen voor de vergelijking. Bij KKD, 2. Bundesliga, Ligue 2, LaLiga 2, Serie B, Liga Portugal en Pro League is de quotering de hoogste prijs over meerdere bookmakers. Geen garantie, speel verantwoord.</p>`;
+    return `<p>${head}</p>${rows.join("")}<p class="cbnote">EV = kans × quotering − 1. De kans komt alleen uit het model; de quoteringen dienen alleen voor de vergelijking. Bij KKD, 2. Bundesliga, Ligue 2, LaLiga 2, Serie B, Liga Portugal, Pro League, Superliga en Allsvenskan is de quotering de hoogste prijs over meerdere bookmakers. Geen garantie, speel verantwoord.</p>`;
   }
   const m={
     sure:{sort:x=>Math.max(x.r.ph,x.r.pd,x.r.pa), pick:x=>{const k=[x.r.ph,x.r.pd,x.r.pa]; const i=k.indexOf(Math.max(...k)); return i===0?x.h+" wint":i===2?x.a+" wint":"Gelijkspel";}, odd:x=>{if(!x.o)return null;const k=[x.r.ph,x.r.pd,x.r.pa];return x.o[k.indexOf(Math.max(...k))];}, h:"Beste bets: hoogste kans van slagen"},

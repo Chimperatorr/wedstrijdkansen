@@ -24,6 +24,8 @@ META = {
   "fr2": {"name": "Ligue 2", "country": "Frankrijk", "fc": "fr2", "prevof": "fr.2", "tz": 0, "up": "fr.1", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "es2": {"name": "LaLiga 2", "country": "Spanje", "fc": "es2", "prevof": "es.2", "tz": 0, "up": "es.1", "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "it2": {"name": "Serie B", "country": "Italië", "fc": "it2", "prevof": "it.2", "tz": 0, "up": "it.1", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "dk1": {"name": "Superliga", "country": "Denemarken", "fc": "dk1", "tz": 0, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "se1": {"name": "Allsvenskan", "country": "Zweden", "fc": "se1", "tz": 0, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "fr1": {"name": "Ligue 1", "country": "Frankrijk", "of": "fr.1", "tz": 0, "up": None, "down": "fr.2"},
   "pt1": {"name": "Liga Portugal", "country": "Portugal", "of": "pt.1", "tz": 1, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
   "nl2": {"name": "Keuken Kampioen Divisie", "country": "Nederland", "fc": "nl.2", "tz": 0, "up": "ere", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
@@ -84,6 +86,11 @@ NAMES = {
   "Calcio Padova": "Padova", "Carrarese Calcio": "Carrarese", "Mantova 1911 SSD": "Mantova", "US Avellino": "Avellino", "US Catanzaro": "Catanzaro",
   "Verona": "Hellas Verona", "Sudtirol": "Südtirol", "Entella": "Virtus Entella", "L.R. Vicenza": "Vicenza", "AC Reggiana 1919": "Reggiana",
   "Delfino Pescara": "Pescara", "SSC Bari": "Bari", "Spezia Calcio": "Spezia",
+  # Denemarken / Zweden (BetExplorer-namen)
+  "FC Copenhagen": "FC København", "Brondby": "Brøndby", "Midtjylland": "FC Midtjylland", "Nordsjaelland": "FC Nordsjælland",
+  "Aarhus": "AGF", "Odense": "OB", "Horsens": "AC Horsens", "Sonderjyske": "SønderjyskE",
+  "Goteborg": "Göteborg", "Hacken": "Häcken", "Malmo FF": "Malmö FF", "Djurgarden": "Djurgården", "Mjallby": "Mjällby",
+  "Vasteras SK": "Västerås SK", "Orgryte": "Örgryte",
   # Eredivisie vorig seizoen (voor degradanten KKD)
   "Heracles Almelo": "Heracles", "NAC Breda": "NAC", "FC Volendam": "Volendam",
 }
@@ -165,6 +172,7 @@ def of_prev(code):
 
 # ---------- bet365 ----------
 def norm(s):
+    s = s.replace("æ", "ae").replace("Æ", "Ae").replace("ø", "o").replace("Ø", "O")
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
     s = s.replace("man utd", "manchester united").replace("man city", "manchester city").replace("nottm", "nottingham")
     s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach")
@@ -172,6 +180,7 @@ def norm(s):
     s = s.replace("maastricht", "mvv").replace("venlo", "vvv").replace("bruges", "brugge").replace("st. truidense", "sint truiden").replace("st truidense", "sint truiden")
     s = s.replace("standard liege", "standard luik").replace("union saint-gilloise", "union sg").replace("oud-heverlee leuven", "oh leuven").replace("royal antwerp", "antwerp")
     s = s.replace("sporting lisbon", "sporting cp").replace("benfica lisbon", "benfica").replace("vitoria sc guimaraes", "vitoria guimaraes").replace("hertha bsc berlin", "hertha")
+    s = s.replace("fc copenhagen", "fc kobenhavn").replace("copenhagen", "kobenhavn").replace("agf aarhus", "agf").replace("vasteraas", "vasteras").replace("malmo ff", "malmo").replace("sonderjyske", "sonderjyske")
     s = s.replace("alto adige", "sudtirol").replace("nancy-lorraine", "nancy").replace("red star 93", "red star").replace("real sociedad san sebastian b", "real sociedad b").replace("clermont foot", "clermont")
     s = s.replace("psg", "paris sg").replace("paris saint-germain", "paris sg").replace("a coruna", "la coruna")
     s = re.sub(r"\b(fc|afc|cf|sc|ac|as|club|de|calcio|tsg|vfl|vfb|sv|1\.|the)\b", " ", s)

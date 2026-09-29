@@ -146,6 +146,7 @@ const COMPS = [
   {k:"de1",c:"Duitsland",n:"Bundesliga"},{k:"de2",c:"Duitsland",n:"2. Bundesliga"},
   {k:"fr1",c:"Frankrijk",n:"Ligue 1"},{k:"fr2",c:"Frankrijk",n:"Ligue 2"},{k:"pt1",c:"Portugal",n:"Liga Portugal"},
   {k:"be1",c:"België",n:"Pro League"},
+  {k:"dk1",c:"Denemarken",n:"Superliga"},{k:"se1",c:"Zweden",n:"Allsvenskan"},
   {k:"nl:all",c:"Internationaal",n:"Nations League"}
 ];
 const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
@@ -732,7 +733,7 @@ function applyComp(){
   const sum = !act.length? "Geen competitie gekozen" : act.length===1? cFull(act[0]) : `${act.length} competities`;
   $("compTitle").textContent = sum;
   $("compSum").textContent = sum;
-  $("appsub").textContent = nl ? `Internationaal · ${cName(state.fk)} 2026/27 · Elo-sterkte, vorm en onderlinge duels` : `${cFull(state.fk)} 2026/27 · seizoen, historie, vorm${DATA.noAbs?"":" en blessures"}`;
+  $("appsub").textContent = nl ? `Internationaal · ${cName(state.fk)} 2026/27 · Elo-sterkte, vorm en onderlinge duels` : `${cFull(state.fk)} ${DATA.season||"2026/27"} · seizoen, historie, vorm${DATA.noAbs?"":" en blessures"}`;
   document.querySelectorAll(".ere-only").forEach(e=>e.hidden=nl);
   $("compList").querySelectorAll("input").forEach(i=>i.checked=state.sel.includes(i.value));
 }
