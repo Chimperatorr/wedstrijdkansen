@@ -105,6 +105,8 @@ NAMES = {
   "Besiktas": "Beşiktaş", "Fenerbahce": "Fenerbahçe", "Basaksehir": "Başakşehir", "Kasimpasa": "Kasımpaşa", "Goztepe": "Göztepe",
   "Genclerbirligi": "Gençlerbirliği", "Eyupspor": "Eyüpspor", "Corum": "Çorum FK", "Rizespor": "Çaykur Rizespor", "Gaziantep": "Gaziantep FK",
   "Zurich": "FC Zürich",
+  "Termalica B-B.": "Bruk-Bet Termalica", "Lechia Gdansk": "Lechia Gdańsk", "Karagumruk": "Fatih Karagümrük", "Stromsgodset": "Strømsgodset",
+  "Norrkoping": "Norrköping", "Varnamo": "Värnamo", "Oster": "Öster",
   # Eredivisie vorig seizoen (voor degradanten KKD)
   "Heracles Almelo": "Heracles", "NAC Breda": "NAC", "FC Volendam": "Volendam",
 }
@@ -170,6 +172,22 @@ def fc_load(path):
         if m: played.append([d, h, a, int(m.group(1)), int(m.group(2))])
         else: fx.append([d, h, a, "" if mid in ("01:00", "", "-") else mid])
     return played, fx
+
+def prevbx_load(code):
+    """Vorig seizoen uit prevbx/<code>.txt (BetExplorer: 'DD.MM.[YYYY] | thuis | uit | h-a'; zonder jaar = 2026)."""
+    p = f"{HERE}/prevbx/{code}.txt"
+    if not os.path.exists(p): return None
+    out, seen = [], set()
+    for line in open(p, encoding="utf-8"):
+        q = [x.strip() for x in line.split("|")]
+        if len(q) != 4: continue
+        m = re.match(r"(\d{2})\.(\d{2})\.(\d{4})?", q[0]); sc = re.match(r"^(\d+)[-:](\d+)$", q[3])
+        if not m or not sc: continue
+        h, a = nm(q[1]), nm(q[2])
+        if (h, a) in seen: continue
+        seen.add((h, a))
+        out.append([f"{m.group(3) or '2026'}-{m.group(2)}-{m.group(1)}", h, a, int(sc.group(1)), int(sc.group(2))])
+    return sorted(out) or None
 
 def prev_table(matches):
     t = {}
@@ -322,12 +340,15 @@ def main():
             old = json.load(open(f"{ARGS.update}/{code}.json"))
         if old is not None:
             prevm = old.get("prevMatches") or None
+            if not prevm and prevbx_load(code):   # nieuw toegevoegd vorig seizoen
+                prevm = prevbx_load(code)
+                old = dict(old, prev=prev_table(prevm))
             prev = {t: v for t, v in (old.get("prev") or {}).items() if t in teams}
             rel = [t for t in (old.get("rel") or []) if t in teams]
             unknown = [t for t in teams if t not in old.get("teams", [])]
             if unknown: print(f"  LET OP {code}: onbekende teamnamen {unknown} (naam-mapping in NAMES aanvullen)", file=sys.stderr)
         else:
-            prevm = of_prev(prevcode) if prevcode else None
+            prevm = of_prev(prevcode) if prevcode else prevbx_load(code)
             prev = {t: v for t, v in prev_table(prevm).items() if t in teams} if prevm else {}
             up = prev_sets.get(M["up"], set()) if M.get("up") else set()
             rel = [t for t in teams if t not in prev and t in up]
@@ -341,7 +362,7 @@ def main():
             odds = {k: v for k, v in (old.get("odds", {}).get("bet365") or {}).items() if k in keep}
         doc = {
             "code": code, "name": M["name"], "country": M["country"], "updated": TODAY,
-            "season": M.get("season", "2026/27"), "teams": teams, "prev": prev, "rel": rel, "noPrev": not prevm,
+            "season": M.get("season", "2026/27"), "teams": teams, "prev": prev, "rel": rel, "noPrev": not prevm and not prev,
             "matches": sorted(played), "prevMatches": sorted(prevm or []), "fixtures": fx,
             "absences": [], "noAbs": True,
             "odds": {"bet365": odds, "updated": TODAY if odds else None, "source": M.get("osrc", "bet365"), "label": M.get("olabel", "bet365")},

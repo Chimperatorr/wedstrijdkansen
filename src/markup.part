@@ -152,6 +152,7 @@ const COMPS = [
 ];
 const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
 const cName = k => CMAP[k]?.n || k, cFull = k => CMAP[k]? CMAP[k].c+" · "+CMAP[k].n : k;
+const PREVLBL = () => /^\d{4}$/.test(DATA.season||"") ? String(+DATA.season-1) : "25/26";
 let RC = {};   // ratings per competitie
 const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0};
 const state = {more:{}, open:false, sel:["ere"], fk:"ere", comp:"ere", league:"all", home:null, away:null, date:null, fixture:null, week:null, day:"all", ...DEF, adj:{}, off:{}};
@@ -587,7 +588,7 @@ function recentHTML(team, matches){
   const compName = state.comp==="nl" ? "Nations League" : cName(state.fk);
   const map=new Map();
   ((DATA.recent||{})[team]||[]).forEach(m=>map.set(m[0],m));
-  (DATA.prevMatches||[]).filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(m[0],[m[0],m[1],m[2],m[3],m[4],compName+" 25/26"]));
+  (DATA.prevMatches||[]).filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(m[0],[m[0],m[1],m[2],m[3],m[4],compName+" "+PREVLBL()]));
   matches.filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(m[0],[m[0],m[1],m[2],m[3],m[4],compName]));
   const list=[...map.values()].sort((a,b)=>a[0]<b[0]?1:-1).slice(0,25);
   if(!list.length) return "";
@@ -639,7 +640,7 @@ function ctxPanelNL(el, team, S){
 function h2hFor(a,b){
   const key=[a,b].sort().join("|"), list=((DATA.h2h||{})[key]||[]).map(x=>x.slice());
   const cn=cName(state.fk);
-  const extra = state.comp==="nl" ? (DATA.nl?.matches||[]).map(m=>[...m,"Nations League"]) : [...(DATA.matches||[]).map(m=>[...m,cn]), ...(DATA.prevMatches||[]).map(m=>[...m,cn+" 25/26"])];
+  const extra = state.comp==="nl" ? (DATA.nl?.matches||[]).map(m=>[...m,"Nations League"]) : [...(DATA.matches||[]).map(m=>[...m,cn]), ...(DATA.prevMatches||[]).map(m=>[...m,cn+" "+PREVLBL()])];
   extra.filter(m=>(m[1]===a&&m[2]===b)||(m[1]===b&&m[2]===a)).forEach(m=>{ if(!list.some(x=>x[0]===m[0])) list.push(m); });
   return list.sort((x,y)=>x[0]<y[0]?1:-1).slice(0,6);
 }
