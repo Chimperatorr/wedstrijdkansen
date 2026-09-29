@@ -361,3 +361,11 @@ body{padding-bottom:96px}
 .dwrap .panel.collapsed .wkhead > *:not(h2){display:none}
 .dwrap .panel h2.tog small{margin-left:6px}
 .dwrap .ctx,.dwrap .grid2{align-items:start}
+/* inklapbare dagen */
+.tday.tog{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px}
+.tday.tog small{font-size:.7rem;letter-spacing:.5px;color:var(--muted);text-transform:none;font-weight:400}
+.tday.tog::after{content:"";margin-left:auto;margin-right:6px;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+.tday.tog.shut::after{transform:rotate(-45deg)}
+.tday.tog:hover{background:rgba(255,255,255,.04)}
+.tday.tog:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.tday.tog small{white-space:nowrap} .tday.tog span{min-width:0}

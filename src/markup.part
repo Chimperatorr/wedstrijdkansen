@@ -357,6 +357,7 @@ function allFixtures(){
 }
 function weekStart(iso){ const d=toD(iso); return new Date(d.getTime()-((d.getUTCDay()+6)%7)*dayMs).toISOString().slice(0,10); }
 function curWeek(W){ const ws=weekStart(todayISO()); return W.find(w=>w.key>=ws)||W[W.length-1]; }
+let CDAY={}; try{ CDAY=JSON.parse(localStorage.getItem("wk_cday")||"{}")||{}; const lim=new Date(Date.now()-14*864e5).toISOString().slice(0,10); Object.keys(CDAY).forEach(k=>{ if(k<lim) delete CDAY[k]; }); }catch(e){}
 function tipHit(tip,res){ const o=res[0]>res[1]?"1":res[0]<res[1]?"2":"X"; return tip.includes(o); }
 function weeks(){
   const today=todayISO(), map=new Map();
@@ -385,9 +386,11 @@ function renderWeek(){
   let html=`<div class="trow thead"><span>Tijd</span><span>Wedstrijd</span><span class="c">Index</span><span class="c">1</span><span class="c">X</span><span class="c">2</span><span class="c">Tip</span><span class="c">Uitslag</span><span class="c">Goals</span><span class="c">BTTS</span><span class="c">Odds</span></div>`;
   const multi = state.sel.filter(k=>!CMAP[k]?.na).length>1;
   shown.forEach(d=>{
-    html+=`<div class="tday">${esc(toD(d).toLocaleDateString("nl-NL",{weekday:"long",day:"numeric",month:"long"}))}</div>`;
+    const dayFx=wk.fx.filter(f=>f[0]===d), shut=!!CDAY[d], nDone=dayFx.filter(f=>f.res).length;
+    html+=`<div class="tday tog${shut?" shut":""}" role="button" tabindex="0" aria-expanded="${!shut}" data-cday="${d}"><span>${esc(toD(d).toLocaleDateString("nl-NL",{weekday:"long",day:"numeric",month:"long"}))}</span><small>${dayFx.length} ${dayFx.length===1?"duel":"duels"}${nDone?` · ${nDone} gespeeld`:""}</small></div>`;
+    if(shut) return;
     let lastK=null;
-    wk.fx.filter(f=>f[0]===d).sort((x,y)=>multi?(x.o-y.o||(x[3]||"").localeCompare(y[3]||"")):0).forEach(f=>{
+    dayFx.sort((x,y)=>multi?(x.o-y.o||(x[3]||"").localeCompare(y[3]||"")):0).forEach(f=>{
       if(multi && f.k!==lastK){ html+=`<div class="tcomp">${esc(cFull(f.k))}</div>`; lastK=f.k; }
       use(f.k, !!f.res);
       const r=fullModel(f[1],f[2],f[0]), s=summary(r), key=f.k+"#"+f.slice(0,3).join("|"), mk=r.market;
@@ -414,6 +417,10 @@ function renderWeek(){
   $("tbl").innerHTML=html;
   const selRow = state.open!==false ? [...$("tbl").querySelectorAll("button.trow")].find(b=>b.dataset.k===state.fixture) : null;
   if(selRow){ selRow.after(dw); dw.hidden=false; } else dw.hidden=true;
+  $("tbl").querySelectorAll(".tday.tog").forEach(h=>{
+    const t=()=>{ const d=h.dataset.cday; CDAY[d]=!CDAY[d]; if(!CDAY[d]) delete CDAY[d]; try{ localStorage.setItem("wk_cday",JSON.stringify(CDAY)); }catch(e){} renderWeek(); };
+    h.addEventListener("click",t); h.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); t(); } });
+  });
   $("tbl").querySelectorAll("button.trow").forEach(b=>b.addEventListener("click",()=>{
     if(state.fixture===b.dataset.k && state.open!==false){ state.open=false; renderWeek(); return; }
     const [c,rest]=b.dataset.k.split("#"), [d,h,a]=rest.split("|"); state.fk=c; state.home=h; state.away=a; state.date=d; state.fixture=b.dataset.k; state.fres=b.dataset.res||null; state.open=true; applyComp(); setStamp(LIVE); renderAll();
