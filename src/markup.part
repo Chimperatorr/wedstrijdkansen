@@ -103,6 +103,11 @@
   </div>
   <div id="detailHome"></div>
 
+  <details class="settings" id="trackD">
+    <summary>Trackrecord van het model</summary>
+    <div class="set-body" id="trackBody"><p class="note">Wordt berekend zodra je dit openklapt.</p></div>
+  </details>
+
   <details class="settings" id="settings">
     <summary>Modelinstellingen</summary>
     <div class="set-body">
@@ -707,7 +712,50 @@ function saveManual(){
   saveT=setTimeout(async()=>{ try{ await ODB.doc("odds/manual").set({odds:MANUAL,updated:new Date().toISOString()}); $("oddsSave").textContent="Opgeslagen"; }
     catch(e){ $("oddsSave").textContent="Opslaan mislukt"; } },600);
 }
-function renderAll(){ use(state.fk); syncSliders(); renderWeek(); use(state.fk, !!state.fres); render(); }
+
+// ---------- Trackrecord ----------
+function backtest(){
+  const cur=state.fk, out=[];
+  for(const k of state.sel){
+    if(CMAP[k]?.na || k.startsWith("nl:")) continue;
+    use(k); const D=DATA, dk=dataKey(k), base=(dk==="main"?"ere":k);
+    const byW={}; D.matches.forEach(m=>{ (byW[weekStart(m[0])]||(byW[weekStart(m[0])]=[])).push(m); });
+    for(const ws of Object.keys(byW).sort()){
+      const rk=base+"#"+ws; if(!RC[rk]) RC[rk]=ratings(ws); R=RC[rk];
+      for(const m of byW[ws]){
+        if(R.idx[m[1]]===undefined||R.idx[m[2]]===undefined) continue;
+        const r=modelFor(m[1],m[2],m[0]), s=summary(r);
+        const act=m[3]>m[4]?0:m[3]===m[4]?1:2, P=[r.ph,r.pd,r.pa];
+        const top=P.indexOf(Math.max(...P));
+        out.push({k,ws,act,P,top,tip:tipHit(s.tip,[m[3],m[4]]),topHit:top===act,exact:!!(s.sc&&s.sc.i===m[3]&&s.sc.j===m[4])});
+      }
+    }
+  }
+  use(cur); return out;
+}
+function renderTrack(){
+  const rows=backtest(), body=$("trackBody");
+  if(!rows.length){ body.innerHTML='<p class="note">Geen gespeelde duels in de gekozen competities.</p>'; return; }
+  const pc=(a,n)=>n? Math.round(100*a/n)+"%" : "–";
+  const agg=list=>({n:list.length,tip:list.filter(x=>x.tip).length,top:list.filter(x=>x.topHit).length,ex:list.filter(x=>x.exact).length,home:list.filter(x=>x.act===0).length});
+  const line=(lab,a)=>`<div class="tr4"><span>${lab}</span><span class="c">${a.n}</span><span class="c">${pc(a.tip,a.n)}</span><span class="c">${pc(a.top,a.n)}</span><span class="c">${pc(a.ex,a.n)}</span><span class="c">${pc(a.home,a.n)}</span></div>`;
+  const head=l=>`<div class="tr4 thead"><span>${l}</span><span class="c">Aantal</span><span class="c">Tip</span><span class="c">Fav.</span><span class="c">Exact</span><span class="c">Thuis won</span></div>`;
+  let h=`<p class="note">Elk gespeeld duel van dit seizoen is opnieuw voorspeld met alleen de uitslagen van vóór die speelweek (zonder blessures en quoteringen). <b>Tip</b> = de 1, X, 2 of dubbele kans zoals in de tabel; <b>Favoriet</b> = enkel het meest waarschijnlijke resultaat; <b>Exact</b> = de getoonde uitslag was precies goed; <b>Thuis won</b> = hoe vaak de thuisploeg won.</p>`;
+  h+=`<h3>Per competitie</h3>`+head("Competitie");
+  const ks=[...new Set(rows.map(x=>x.k))];
+  ks.forEach(k=>{ h+=line(esc(cName(k)),agg(rows.filter(x=>x.k===k))); });
+  if(ks.length>1) h+=line("<b>Totaal</b>",agg(rows));
+  const bk=[[0,.3],[.3,.4],[.4,.5],[.5,.6],[.6,.7],[.7,1.01]];
+  h+=`<h3>Kloppen de kansen?</h3><p class="note">Alle drie de uitkomsten van elk duel, gegroepeerd op de kans die het model gaf. Voorspeld en werkelijk horen dicht bij elkaar te liggen.</p>`;
+  h+=`<div class="tr4 thead"><span>Kans</span><span class="c">Aantal</span><span class="c">Model</span><span class="c">Echt</span><span class="c"></span><span class="c"></span></div>`;
+  bk.forEach(([a,b])=>{ let n=0,sp=0,sa=0; rows.forEach(x=>x.P.forEach((p,i)=>{ if(p>=a&&p<b){ n++; sp+=p; if(x.act===i) sa++; } }));
+    if(n) h+=`<div class="tr4"><span>${Math.round(a*100)}–${b>1?100:Math.round(b*100)}%</span><span class="c">${n}</span><span class="c">${pc(sp,n)}</span><span class="c">${pc(sa,n)}</span><span class="c"></span><span class="c"></span></div>`; });
+  const wks=[...new Set(rows.map(x=>x.ws))].sort().reverse();
+  h+=`<h3>Per speelweek</h3>`+head("Week vanaf");
+  wks.forEach(w=>{ h+=line(esc(toD(w).toLocaleDateString("nl-NL",{day:"numeric",month:"short"})),agg(rows.filter(x=>x.ws===w))); });
+  body.innerHTML=h;
+}
+function renderAll(){ use(state.fk); syncSliders(); renderWeek(); use(state.fk, !!state.fres); render(); if($('trackD').open) renderTrack(); }
 
 function setStamp(live){
   $("dot").className="dot"+(live?" live":"");
@@ -772,6 +820,7 @@ function buildCompList(){
 function bind(){
   $("weekSel").addEventListener("change",e=>{ state.week=e.target.value; state.day="all"; renderWeek(); });
   buildCompList();
+  $('trackD').addEventListener('toggle',()=>{ if($('trackD').open) renderTrack(); });
   const adj=(side,field)=>e=>{ const t=side==="H"?state.home:state.away; state.adj[t]={...(state.adj[t]||{att:1,def:1}),[field]:+e.target.value}; syncSliders(); render(); };
   $("aH").addEventListener("input",adj("H","att")); $("dH").addEventListener("input",adj("H","def"));
   $("aA").addEventListener("input",adj("A","att")); $("dA").addEventListener("input",adj("A","def"));

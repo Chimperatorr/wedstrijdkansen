@@ -376,3 +376,10 @@ body{padding-bottom:96px}
 .cbsum{display:grid;grid-template-columns:1fr auto;gap:0 10px;border-top:1px solid var(--line);padding-top:6px}
 .cbsum span{font-weight:500} .cbsum b{font-family:var(--mono);color:var(--secondary);font-size:1.05rem}
 .cbsum small{grid-column:1/-1;color:var(--muted);font-size:.76rem}
+
+#trackBody h3{font-size:.95rem;font-weight:500;margin:10px 0 0}
+.tr4{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(5,minmax(0,1fr));gap:6px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.88rem;align-items:center}
+.tr4.thead{color:var(--muted);font-size:.75rem}
+.tr4 .c{text-align:center}
+@media(max-width:560px){.tr4{font-size:.78rem;gap:3px}.tr4.thead{font-size:.68rem}}
+.tr4.thead{letter-spacing:0;text-transform:none}.tr4.thead span{overflow:hidden;text-overflow:clip}

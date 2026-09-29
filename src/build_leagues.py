@@ -206,7 +206,7 @@ def of_prev(code):
 def norm(s):
     s = s.replace("ı", "i").replace("ł", "l").replace("Ł", "L").replace("æ", "ae").replace("Æ", "Ae").replace("ø", "o").replace("Ø", "O")
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
-    s = s.replace("man utd", "manchester united").replace("man city", "manchester city").replace("nottm", "nottingham")
+    s = s.replace("man utd", "manchester united").replace("man united", "manchester united").replace("d. dresden", "dynamo dresden").replace("man city", "manchester city").replace("nottm", "nottingham")
     s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach")
     s = s.replace("sheff utd", "sheffield united").replace("sheff wed", "sheffield wednesday").replace("wolverhampton", "wolves")
     s = s.replace("maastricht", "mvv").replace("venlo", "vvv").replace("bruges", "brugge").replace("st. truidense", "sint truiden").replace("st truidense", "sint truiden")
@@ -274,6 +274,48 @@ def b365_load(code, fixtures):
         else:
             print("  geen match voor bet365:", line.strip(), file=sys.stderr)
     return out
+
+
+# ---------- blessures (sportsgambler.com / premierinjuries.com -> abs/<code>.txt) ----------
+REASONS = [("yellow", "Geschorst (gele kaarten)"), ("2nd yellow", "Geschorst (2e geel)"), ("red card", "Geschorst (rode kaart)"), ("suspen", "Geschorst"),
+  ("cruciate", "Kruisbandblessure"), ("knee", "Knieblessure"), ("ankle", "Enkelblessure"), ("hamstring", "Hamstringblessure"), ("thigh", "Bovenbeenblessure"),
+  ("muscle", "Spierblessure"), ("calf", "Kuitblessure"), ("groin", "Liesblessure"), ("foot", "Voetblessure"), ("shoulder", "Schouderblessure"),
+  ("back", "Rugblessure"), ("neck", "Nekblessure"), ("head", "Hoofdblessure"), ("hip", "Heupblessure"), ("lower leg", "Onderbeenblessure"), ("rib", "Ribblessure"),
+  ("illness", "Ziek"), ("wrist", "Polsblessure"), ("hand", "Handblessure"), ("elbow", "Elleboogblessure"), ("abdom", "Buikblessure"), ("knock", "Knock"),
+  ("physical", "Fysieke klachten"), ("not registered", "Niet ingeschreven")]
+def abs_reason(r):
+    r = r.lower()
+    if "2nd yellow" in r: return "Geschorst (2e geel)"
+    for k, v in REASONS:
+        if k in r: return v
+    return "Blessure"
+
+def abs_load(code, teams, old_abs):
+    """Regels 'Team | Speler | Positie | Reden | Terug (YYYY-MM-DD of -)'. Gewicht 1 (geen speelminuten bekend); 'sinds' blijft die van de eerste keer dat de speler in de lijst stond."""
+    path = f"{HERE}/abs/{code}.txt"
+    if not os.path.exists(path): return None
+    since_old = {(a[0], a[1]): a[4] for a in (old_abs or [])}
+    out = {}
+    for line in open(path, encoding="utf-8"):
+        p = [x.strip() for x in line.split("|")]
+        if len(p) < 5 or p[1] in ("", "-") or p[0].lower().startswith("no players"): continue
+        team, name, pos, why, ret = p[0], p[1], p[2], p[3], p[4]
+        best, bs = None, 0
+        for t in teams:
+            sc = sim(team, t)
+            if sc > bs: best, bs = t, sc
+        if bs < 0.8:
+            print(f"  blessures {code}: geen club gevonden voor '{team}'", file=sys.stderr); continue
+        rd = pdate(ret) if ret not in ("-", "–", "") else None
+        if rd and rd <= TODAY: continue
+        po = {"G": "D", "D": "D", "M": "M", "F": "A", "A": "A"}.get(pos[:1].upper(), "M")
+        key = (best, name)
+        row = [best, name, po, 1, since_old.get(key, TODAY), rd, abs_reason(why)]
+        if key in out:  # dubbel: houd de langste afwezigheid
+            o = out[key]
+            if o[5] is None or (rd is not None and o[5] >= rd): continue
+        out[key] = row
+    return sorted(out.values(), key=lambda a: (a[0], a[1]))
 
 EN = {"Spain":"Spanje","England":"Engeland","France":"Frankrijk","Portugal":"Portugal","Belgium":"België","Netherlands":"Nederland","Holland":"Nederland",
  "Switzerland":"Zwitserland","Norway":"Noorwegen","Croatia":"Kroatië","Germany":"Duitsland","Denmark":"Denemarken","Austria":"Oostenrijk","Turkey":"Turkije","Turkiye":"Turkije",
@@ -355,6 +397,7 @@ def main():
         missing = [t for t in teams if t not in prev and t not in rel]
         fx = [f for f in fx if f[0] >= TODAY]
         fx.sort(key=lambda f: (f[0], f[3]))
+        ABS = abs_load(code, teams, (old or {}).get("absences"))
         odds = b365_load(code, fx)
         fx.sort(key=lambda f: (f[0], f[3]))
         if not odds and old is not None:   # geen nieuwe quoteringen: oude houden voor nog te spelen duels
@@ -364,7 +407,7 @@ def main():
             "code": code, "name": M["name"], "country": M["country"], "updated": TODAY,
             "season": M.get("season", "2026/27"), "teams": teams, "prev": prev, "rel": rel, "noPrev": not prevm and not prev,
             "matches": sorted(played), "prevMatches": sorted(prevm or []), "fixtures": fx,
-            "absences": [], "noAbs": True,
+            "absences": ABS if ABS is not None else [], "noAbs": ABS is None,
             "odds": {"bet365": odds, "updated": TODAY if odds else None, "source": M.get("osrc", "bet365"), "label": M.get("olabel", "bet365")},
             "source": (M["src"] if M.get("src") else "openfootball (github.com/openfootball)" if M.get("of") else
                         "openfootball/openligadb" if M.get("openliga") else "fcupdate.nl"),
