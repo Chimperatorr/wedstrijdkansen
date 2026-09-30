@@ -104,7 +104,7 @@ NAMES = {
   "Bodo/Glimt": "Bodø/Glimt", "Valerenga": "Vålerenga", "Tromso": "Tromsø", "Lillestrom": "Lillestrøm",
   "Besiktas": "Beşiktaş", "Fenerbahce": "Fenerbahçe", "Basaksehir": "Başakşehir", "Kasimpasa": "Kasımpaşa", "Goztepe": "Göztepe",
   "Genclerbirligi": "Gençlerbirliği", "Eyupspor": "Eyüpspor", "Corum": "Çorum FK", "Rizespor": "Çaykur Rizespor", "Gaziantep": "Gaziantep FK",
-  "Zurich": "FC Zürich",
+  "Zurich": "FC Zürich", "FC Zürich": "FC Zürich", "FC København": "FC København", "FC Nordsjælland": "FC Nordsjælland",
   "Termalica B-B.": "Bruk-Bet Termalica", "Lechia Gdansk": "Lechia Gdańsk", "Karagumruk": "Fatih Karagümrük", "Stromsgodset": "Strømsgodset",
   "Norrkoping": "Norrköping", "Varnamo": "Värnamo", "Oster": "Öster",
   # Eredivisie vorig seizoen (voor degradanten KKD)
@@ -130,6 +130,7 @@ def of_load(path, tz):
     played, fx = [], []
     for m in d["matches"]:
         sc = m.get("score") if isinstance(m.get("score"), dict) else None
+        if isinstance(m.get("score"), list) and len(m["score"]) == 2: sc = {"ft": m["score"]}   # openfootball schrijft soms [h, a]
         h, a = nm(m["team1"]), nm(m["team2"])
         if sc and sc.get("ft"):
             played.append([m["date"], h, a, sc["ft"][0], sc["ft"][1]])
@@ -318,7 +319,7 @@ def abs_load(code, teams, old_abs):
     return sorted(out.values(), key=lambda a: (a[0], a[1]))
 
 EN = {"Spain":"Spanje","England":"Engeland","France":"Frankrijk","Portugal":"Portugal","Belgium":"België","Netherlands":"Nederland","Holland":"Nederland",
- "Switzerland":"Zwitserland","Norway":"Noorwegen","Croatia":"Kroatië","Germany":"Duitsland","Denmark":"Denemarken","Austria":"Oostenrijk","Turkey":"Turkije","Turkiye":"Turkije",
+ "Switzerland":"Zwitserland","Norway":"Noorwegen","Croatia":"Kroatië","Germany":"Duitsland","Denmark":"Denemarken","Austria":"Oostenrijk","Turkey":"Turkije","Turkiye":"Turkije","Türkiye":"Turkije",
  "Italy":"Italië","Ukraine":"Oekraïne","Greece":"Griekenland","Scotland":"Schotland","Sweden":"Zweden","Rep of Ireland":"Ierland","Republic of Ireland":"Ierland","Ireland":"Ierland",
  "Kosovo":"Kosovo","Poland":"Polen","Serbia":"Servië","Hungary":"Hongarije","Slovenia":"Slovenië","Wales":"Wales","Czechia":"Tsjechië","Czech Republic":"Tsjechië",
  "Northern Ireland":"Noord-Ierland","Romania":"Roemenië","Georgia":"Georgië","Bosnia-Herzegovina":"Bosnië en Herzegovina","Bosnia and Herzegovina":"Bosnië en Herzegovina","Bosnia":"Bosnië en Herzegovina",
@@ -398,6 +399,8 @@ def main():
         fx = [f for f in fx if f[0] >= TODAY]
         fx.sort(key=lambda f: (f[0], f[3]))
         ABS = abs_load(code, teams, (old or {}).get("absences"))
+        if ABS is None and old is not None and not old.get("noAbs") and old.get("absences"):   # geen nieuwe bron: oude blessures houden
+            ABS = [a for a in old["absences"] if a[0] in teams and (a[5] is None or a[5] > TODAY)]
         odds = b365_load(code, fx)
         fx.sort(key=lambda f: (f[0], f[3]))
         if not odds and old is not None:   # geen nieuwe quoteringen: oude houden voor nog te spelen duels
