@@ -62,3 +62,8 @@ BELANGRIJK — UITSLAGEN: het belangrijkste doel van deze run is dat ALLE duels 
    - git add -A, commit "Data bijgewerkt <datum>", git pull --rebase origin main, en push naar main. Mislukt de push, meld dan in het eindbericht de exacte foutmelding (niet eindeloos opnieuw proberen). Deze stap is verplicht: sla hem nooit over.
 
 10. Stuur altijd een kort eindbericht: per competitie het aantal nieuwe uitslagen, gewijzigde blessures, bijgewerkte quoteringen (per competitie aantal), toegevoegde h2h-paren, en of de GitHub-push gelukt is (met commit-hash) of waarom niet. Meld ook duels van gisteren die nog zonder uitslag zijn.
+
+
+AANVULLENDE REGELS (1 okt 2026):
+- Zet bij elke succesvol afgeronde run `updated` op vandaag in model/current (incl. odds.updated) en in alle 20 leagues/<code>-documenten, ook als er verder niets is veranderd, zodat de kop van de site "bijgewerkt <vandaag>" toont.
+- Lukt een quoteringsbron (bijv. bet365, 403) niet, haal de quoteringen dan ergens anders vandaan: Oddschecker (fractioneel, hoogste prijs; bv. https://www.oddschecker.com/football/netherlands/eredivisie), SportyTrader, of web search. Controleer dat 1/kans-som tussen 0,98 en 1,15 ligt, en vermeld de gebruikte bron in odds.source. Let op: Oddschecker-pagina's kunnen verouderd zijn (bv. Nations League toonde 2024): alleen duels uit het huidige programma overnemen.
