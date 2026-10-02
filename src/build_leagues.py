@@ -208,7 +208,7 @@ def norm(s):
     s = s.replace("ı", "i").replace("ł", "l").replace("Ł", "L").replace("æ", "ae").replace("Æ", "Ae").replace("ø", "o").replace("Ø", "O")
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
     s = s.replace("man utd", "manchester united").replace("man united", "manchester united").replace("d. dresden", "dynamo dresden").replace("man city", "manchester city").replace("nottm", "nottingham")
-    s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach")
+    s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach").replace("borussia mgladbach", "monchengladbach").replace("cologne", "koln")
     s = s.replace("sheff utd", "sheffield united").replace("sheff wed", "sheffield wednesday").replace("wolverhampton", "wolves")
     s = s.replace("maastricht", "mvv").replace("venlo", "vvv").replace("bruges", "brugge").replace("st. truidense", "sint truiden").replace("st truidense", "sint truiden")
     s = s.replace("standard liege", "standard luik").replace("union saint-gilloise", "union sg").replace("oud-heverlee leuven", "oh leuven").replace("royal antwerp", "antwerp")
