@@ -111,6 +111,16 @@ NAMES = {
   "Heracles Almelo": "Heracles", "NAC Breda": "NAC", "FC Volendam": "Volendam",
 }
 
+NAMES.update({
+  "Ipswich": "Ipswich Town", "Leeds": "Leeds United", "Manchester Utd": "Manchester United",
+  "Birmingham": "Birmingham City", "Blackburn": "Blackburn Rovers", "Bolton": "Bolton Wanderers", "Cardiff": "Cardiff City",
+  "Charlton": "Charlton Athletic", "Derby": "Derby County", "Lincoln": "Lincoln City", "Norwich": "Norwich City",
+  "Sheffield Utd": "Sheffield United", "Stoke": "Stoke City", "Swansea": "Swansea City",
+  "Alaves": "Alavés", "Ath Bilbao": "Athletic Bilbao", "Atl. Madrid": "Atlético Madrid", "Malaga": "Málaga",
+  "Bayern Munich": "Bayern München", "Dortmund": "Borussia Dortmund", "Stuttgart": "VfB Stuttgart", "Mainz": "Mainz 05", "PSG": "Paris SG",
+  "Academico Viseu": "Académico Viseu", "Maritimo": "Marítimo",
+})
+
 def nm(s):
     s = s.strip()
     if s in NAMES: return NAMES[s]
