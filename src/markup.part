@@ -798,9 +798,9 @@ function loadLeague(k, d, live){
 function buildCompList(){
   let html=`<div class="msbtns"><button type="button" data-all="1">Alles</button><button type="button" data-all="0">Alles deselecteren</button></div>`, last="";
   COMPS.forEach(c=>{
-    if(c.c!==last){ html+=`<div class="msg">${esc(c.c)}</div>`; last=c.c; }
-    html+= c.na ? `<label class="na"><input type="checkbox" disabled value="${c.k}">${esc(c.c+" · "+c.n)}<small>geen databron</small></label>`
-                : `<label><input type="checkbox" value="${c.k}">${esc(c.c+" · "+c.n)}</label>`;
+    if(c.c!==last){ html+=`<div class="msg" data-g="${esc(c.c)}"><span class="chev">▾</span>${esc(c.c)}</div>`; last=c.c; }
+    html+= c.na ? `<label class="na" data-g="${esc(c.c)}"><input type="checkbox" disabled value="${c.k}">${esc(c.c+" · "+c.n)}<small>geen databron</small></label>`
+                : `<label data-g="${esc(c.c)}"><input type="checkbox" value="${c.k}">${esc(c.c+" · "+c.n)}</label>`;
   });
   $("compList").innerHTML=html;
   const save=()=>{ try{ localStorage.setItem("wk_sel",JSON.stringify(state.sel)); }catch(e){} };
@@ -809,7 +809,12 @@ function buildCompList(){
     const s=new Set(state.sel); i.checked? s.add(i.value) : s.delete(i.value);
     state.sel=COMPS.map(c=>c.k).filter(k=>s.has(k)); state.week=null; save(); refresh(false);
   });
+  let shut=new Set(); try{ shut=new Set(JSON.parse(localStorage.getItem("wk_shut")||"[]")); }catch(e){}
+  const fold=()=>{ $("compList").querySelectorAll("[data-g]").forEach(el=>{ const c=shut.has(el.dataset.g); if(el.classList.contains("msg")){ el.classList.toggle("shut",c); el.firstChild.textContent=c?"▸":"▾"; } else el.hidden=c; }); };
+  fold();
   $("compList").addEventListener("click",e=>{
+    const g=e.target.closest(".msg[data-g]");
+    if(g){ const k=g.dataset.g; shut.has(k)?shut.delete(k):shut.add(k); try{ localStorage.setItem("wk_shut",JSON.stringify([...shut])); }catch(x){} fold(); return; }
     const b=e.target.closest("button[data-all]"); if(!b) return;
     state.sel = b.dataset.all==="1"? COMPS.filter(c=>!c.na).map(c=>c.k) : [];
     state.week=null; save(); refresh(false);
