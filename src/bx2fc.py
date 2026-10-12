@@ -17,7 +17,10 @@ for code in sys.argv[1:]:
                 if (q[1], q[2]) in seen: continue
                 seen.add((q[1], q[2])); out.append(f"{d} | {q[1]} | {q[3]} | {q[2]}")
             elif kind == "fix":
-                t = f"{(int(m.group(4)) + 1) % 24:02d}:{m.group(5)}" if m.group(4) else ""
+                sh = 1
+                if code in ("ucl", "uel", "uecl"):   # Europese toernooien: BetExplorer toont vast UTC+1; NL-tijd = +1 in zomertijd, +0 in wintertijd
+                    sh = 1 if ("2026-03-29" <= d < "2026-10-25" or d >= "2027-03-28") else 0
+                t = f"{(int(m.group(4)) + sh) % 24:02d}:{m.group(5)}" if m.group(4) else ""
                 out.append(f"{d} | {q[1]} | {t} | {q[2]}")
     open(f"{H}/fc/{code}.txt", "w", encoding="utf-8").write("\n".join(out) + "\n")
     print(code, len(out))

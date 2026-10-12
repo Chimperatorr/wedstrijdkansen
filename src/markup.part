@@ -153,6 +153,7 @@ const COMPS = [
   {k:"be1",c:"België",n:"Pro League"},
   {k:"dk1",c:"Denemarken",n:"Superliga"},{k:"se1",c:"Zweden",n:"Allsvenskan"},
   {k:"pl1",c:"Polen",n:"Ekstraklasa"},{k:"no1",c:"Noorwegen",n:"Eliteserien"},{k:"at1",c:"Oostenrijk",n:"Bundesliga"},{k:"tr1",c:"Turkije",n:"Süper Lig"},{k:"ch1",c:"Zwitserland",n:"Super League"},
+  {k:"ucl",c:"Europa",n:"Champions League"},{k:"uel",c:"Europa",n:"Europa League"},{k:"uecl",c:"Europa",n:"Conference League"},
   {k:"nl:all",c:"Internationaal",n:"Nations League"}
 ];
 const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
@@ -449,7 +450,7 @@ function ctxPanel(el, team, S, side){
     ${recentHTML(team, DATA.matches||[])}
     <dl class="kv">
       <dt class="hd">Opbouw sterkte</dt><dd class="hd">Aanval</dd><dd class="hd">Verdediging</dd>
-      <dt>Vorig seizoen</dt>${histTxt?`<dd class="num" style="grid-column:span 2">${histTxt}</dd>`:`<dd class="num">${fmt2(S.hist.att)}</dd><dd class="num">${fmt2(S.hist.def)}</dd>`}
+      <dt>${DATA.euPrior?"Startsterkte (nationale competitie)":"Vorig seizoen"}</dt>${histTxt?`<dd class="num" style="grid-column:span 2">${histTxt}</dd>`:`<dd class="num">${fmt2(S.hist.att)}</dd><dd class="num">${fmt2(S.hist.def)}</dd>`}
       <dt>+ dit seizoen</dt><dd class="num">${fmt2(S.season.att)}</dd><dd class="num">${fmt2(S.season.def)}</dd>
       <dt>+ vorm</dt><dd class="num">${fmt2(S.form.att)}</dd><dd class="num">${fmt2(S.form.def)}</dd>
       <dt>Blessures</dt><dd class="num">${S.la?"−"+(S.la*100).toFixed(1).replace(".",",")+"%":"–"}</dd><dd class="num">${S.ld?"+"+(S.ld*100).toFixed(1).replace(".",",")+"%":"–"}</dd>
@@ -783,7 +784,7 @@ function applyComp(){
   const sum = !act.length? "Geen competitie gekozen" : act.length===1? cFull(act[0]) : `${act.length} competities`;
   $("compTitle").textContent = sum;
   $("compSum").textContent = sum;
-  $("appsub").textContent = nl ? `Internationaal · ${cName(state.fk)} 2026/27 · Elo-sterkte, vorm en onderlinge duels` : `${cFull(state.fk)} ${DATA.season||"2026/27"} · seizoen, historie, vorm${DATA.noAbs?"":" en blessures"}`;
+  $("appsub").textContent = nl ? `Internationaal · ${cName(state.fk)} 2026/27 · Elo-sterkte, vorm en onderlinge duels` : `${cFull(state.fk)} ${DATA.season||"2026/27"} · seizoen, ${DATA.euPrior?"startsterkte uit de nationale competitie":"historie"}, vorm${DATA.noAbs?"":" en blessures"}`;
   document.querySelectorAll(".ere-only").forEach(e=>e.hidden=nl);
   $("compList").querySelectorAll("input").forEach(i=>i.checked=state.sel.includes(i.value));
 }

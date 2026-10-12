@@ -10,6 +10,7 @@ _ap = argparse.ArgumentParser()
 _ap.add_argument("openliga", nargs="?", help="pad naar openliga 2026-27_de.2.txt")
 _ap.add_argument("--update", help="map met bestaande league-docs (<code>.json); historie wordt daaruit overgenomen")
 _ap.add_argument("--out", default=None, help="map om per competitie <code>.json te schrijven")
+_ap.add_argument("--only", default=None, help="alleen deze competities (komma-gescheiden codes)")
 _ap.add_argument("--nl-main", default=None, help="pad naar model/current-JSON: zet b365/nl.txt (Nations League, bet365.com) in odds.bet365 en stop")
 ARGS = _ap.parse_args()
 OPENLIGA = ARGS.openliga
@@ -35,6 +36,9 @@ META = {
   "pt1": {"name": "Liga Portugal", "country": "Portugal", "of": "pt.1", "tz": 1, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
   "nl2": {"name": "Keuken Kampioen Divisie", "country": "Nederland", "fc": "nl.2", "tz": 0, "up": "ere", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
   "be1": {"name": "Pro League", "country": "België", "fc": "be.1", "prevof": "be.1", "tz": 0, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
+  "ucl": {"name": "Champions League", "country": "Europa", "fc": "ucl", "tz": 0, "eu": True, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "uel": {"name": "Europa League", "country": "Europa", "fc": "uel", "tz": 0, "eu": True, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
+  "uecl": {"name": "Conference League", "country": "Europa", "fc": "uecl", "tz": 0, "eu": True, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
 }
 
 NAMES = {
@@ -118,7 +122,7 @@ NAMES.update({
   "Sheffield Utd": "Sheffield United", "Stoke": "Stoke City", "Swansea": "Swansea City",
   "Alaves": "Alavés", "Ath Bilbao": "Athletic Bilbao", "Atl. Madrid": "Atlético Madrid", "Malaga": "Málaga",
   "Bayern Munich": "Bayern München", "Dortmund": "Borussia Dortmund", "Stuttgart": "VfB Stuttgart", "Mainz": "Mainz 05", "PSG": "Paris SG",
-  "Academico Viseu": "Académico Viseu", "Maritimo": "Marítimo",
+  "Nijmegen": "NEC", "AZ Alkmaar": "AZ", "Academico Viseu": "Académico Viseu", "Maritimo": "Marítimo",
 })
 
 def nm(s):
@@ -360,6 +364,61 @@ def nl_odds(path):
     json.dump(D, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("Nations League-quoteringen:", n, "gezet,", miss, "overgeslagen")
 
+# ---------- Europese toernooien: startsterkte uit de nationale competitie ----------
+EU_G = {"en1": .30, "es1": .25, "de1": .22, "it1": .22, "fr1": .12, "pt1": .08, "ere": .05, "be1": -.02, "tr1": -.05, "at1": -.10,
+        "ch1": -.15, "no1": -.15, "dk1": -.15, "se1": -.28, "pl1": -.28}
+# clubs uit competities die we niet volgen: geschatte netto sterkte (log-schaal, 0 = gemiddeld Europees deelnemer)
+EU_UNC = {"Shakhtar Donetsk": .15, "AEK Athens": .05, "Olympiacos Piraeus": .12, "Panathinaikos": -.02, "Slavia Prague": .0, "Sparta Prague": .0,
+  "Plzen": -.08, "Jablonec": -.35, "Sabah Baku": -.45, "Slovan Bratislava": -.4, "Ararat-Armenia": -.5, "Kairat Almaty": -.4, "Riga": -.45,
+  "Kauno Zalgiris": -.5, "Lincoln Red Imps": -.7, "Inter Escaldes": -.9, "Iberia 1999": -.6, "Egnatia": -.4, "Borac Banja Luka": -.45,
+  "Omonia": -.25, "Pafos": -.2, "H. Beer Sheva": -.2, "Celje": -.3, "Din. Zagreb": -.05, "Hajduk Split": -.15, "Crvena zvezda": -.05,
+  "Ferencvaros": -.1, "Levski Sofia": -.3, "CSKA Sofia": -.3, "Celtic": -.1, "Hearts": -.2, "Torreense": -.35, "OFI Crete": -.3,
+  "KuPS": -.35, "Univ. Craiova": -.25}
+EU_POOL = ("en1", "es1", "de1", "it1", "fr1", "pt1", "ere", "be1", "tr1", "at1", "ch1", "no1", "dk1", "se1", "pl1")
+
+def eu_domestic():
+    """net sterkte (goals/duel, met vorig seizoen als startpunt) per club van alle gevolgde topcompetities: {(code, club): net}"""
+    res = {}
+    for code in EU_POOL:
+        p = None
+        for cand in (f"{ARGS.update}/{'main' if code == 'ere' else code}.json" if ARGS.update else None, f"{HERE}/../data/{'main' if code == 'ere' else code}.json", f"{HERE}/data/{'main' if code == 'ere' else code}.json"):
+            if cand and os.path.exists(cand): p = cand; break
+        if not p: continue
+        d = json.load(open(p))
+        net, n = {}, {}
+        for m in d.get("matches", []):
+            for t, gf, ga in ((m[1], m[3], m[4]), (m[2], m[4], m[3])):
+                net[t] = net.get(t, 0) + gf - ga; n[t] = n.get(t, 0) + 1
+        K = 20
+        for t in d.get("teams", []):
+            pv = (d.get("prev") or {}).get(t)
+            pn = (pv[1] - pv[2]) / pv[0] if pv and pv[0] else 0
+            res[(code, t)] = (net.get(t, 0) + K * pn) / (n.get(t, 0) + K) / 1.3 * 0.6 + EU_G[code]
+    return res
+
+def eu_prior(teams):
+    """-> (prev-tabel [duels, gf, ga] per club, mapping clubnaam -> eigen naam, lijst zonder match)"""
+    dom = eu_domestic()
+    names = list(dom)
+    nets, ren, unk = {}, {}, []
+    for t in teams:
+        best, bs = None, 0
+        for k in names:
+            sc = sim(t, k[1])
+            if sc > bs: best, bs = k, sc
+        if t in EU_UNC: nets[t] = EU_UNC[t]
+        elif bs >= 0.8: nets[t] = dom[best]; ren[t] = best[1]
+        else: nets[t] = -0.5; unk.append(t)
+    mean = sum(nets.values()) / len(nets)
+    prev = {}
+    for t in teams:
+        x = nets[t] - mean                       # log-sterkte t.o.v. gemiddelde deelnemer
+        a = max(0.55, min(1.7, pow(2.718281828, x / 2)))   # aanval = e^(x/2), verdediging = e^(-x/2)
+        dv = max(0.55, min(1.7, pow(2.718281828, -x / 2)))
+        A, D = 1 + (a - 1) / 0.8, 1 + (dv - 1) / 0.8      # pagina krimpt 20% richting 1
+        prev[t] = [10, round(10 * 1.3 * A, 1), round(10 * 1.3 * D, 1)]
+    return prev, ren, unk
+
 def main():
     if ARGS.nl_main:
         nl_odds(ARGS.nl_main); return
@@ -369,7 +428,9 @@ def main():
         if pl: prev_sets[c] = set(prev_table(pl))
     if of_prev("nl.1"): prev_sets["ere"] = set(prev_table(of_prev("nl.1")))
     out = {}
+    only = set(ARGS.only.split(",")) if ARGS.only else None
     for code, M in META.items():
+        if only and code not in only: continue
         if M.get("of"):
             played, fx = of_load(f"{HERE}/of/{M['of']}.json", M["tz"])
             prevcode = M["of"]
@@ -388,6 +449,14 @@ def main():
             done = {(m[1], m[2]) for m in played}
             fx = [f for f in fx if (f[1], f[2]) not in done]
         teams = sorted({m[1] for m in played + fx} | {m[2] for m in played + fx})
+        EUP = None
+        if M.get("eu"):   # Europees toernooi: sterkte uit nationale competitie, clubnamen gelijk aan die in de nationale competitie
+            EUP, ren, unk = eu_prior(teams)
+            if unk: print(f"  LET OP {code}: geen sterkte-schatting voor {unk} (EU_UNC aanvullen)", file=sys.stderr)
+            rn = lambda t: ren.get(t, t)
+            played = [[m[0], rn(m[1]), rn(m[2])] + m[3:] for m in played]; fx = [[f[0], rn(f[1]), rn(f[2])] + f[3:] for f in fx]
+            EUP = {rn(t): v for t, v in EUP.items()}
+            teams = sorted({m[1] for m in played + fx} | {m[2] for m in played + fx})
         old = None
         if ARGS.update and os.path.exists(f"{ARGS.update}/{code}.json"):
             old = json.load(open(f"{ARGS.update}/{code}.json"))
@@ -405,6 +474,7 @@ def main():
             prev = {t: v for t, v in prev_table(prevm).items() if t in teams} if prevm else {}
             up = prev_sets.get(M["up"], set()) if M.get("up") else set()
             rel = [t for t in teams if t not in prev and t in up]
+        if EUP is not None: prev, rel, prevm = EUP, [], None
         missing = [t for t in teams if t not in prev and t not in rel]
         fx = [f for f in fx if f[0] >= TODAY]
         fx.sort(key=lambda f: (f[0], f[3]))
@@ -419,7 +489,7 @@ def main():
         doc = {
             "code": code, "name": M["name"], "country": M["country"], "updated": TODAY,
             "season": M.get("season", "2026/27"), "teams": teams, "prev": prev, "rel": rel, "noPrev": not prevm and not prev,
-            "matches": sorted(played), "prevMatches": sorted(prevm or []), "fixtures": fx,
+            "euPrior": bool(M.get("eu")), "matches": sorted(played), "prevMatches": sorted(prevm or []), "fixtures": fx,
             "absences": ABS if ABS is not None else [], "noAbs": ABS is None,
             "odds": {"bet365": odds, "updated": TODAY if odds else None, "source": M.get("osrc", "bet365"), "label": M.get("olabel", "bet365")},
             "source": (M["src"] if M.get("src") else "openfootball (github.com/openfootball)" if M.get("of") else
