@@ -387,3 +387,10 @@ body{padding-bottom:96px}
 .tr4 .c{text-align:center}
 @media(max-width:560px){.tr4{font-size:.78rem;gap:3px}.tr4.thead{font-size:.68rem}}
 .tr4.thead{letter-spacing:0;text-transform:none}.tr4.thead span{overflow:hidden;text-overflow:clip}
+
+.tcomp.tog{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;padding:10px 8px 6px}
+.tcomp.tog small{font-size:.7rem;color:var(--muted);text-transform:none;letter-spacing:.5px}
+.tcomp.tog::after{content:"";margin-left:auto;margin-right:6px;width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+.tcomp.tog.shut::after{transform:rotate(-45deg)}
+.tcomp.tog:hover{background:rgba(255,255,255,.04)}
+.tcomp.tog:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}

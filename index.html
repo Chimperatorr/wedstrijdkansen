@@ -387,6 +387,13 @@ body{padding-bottom:96px}
 .tr4 .c{text-align:center}
 @media(max-width:560px){.tr4{font-size:.78rem;gap:3px}.tr4.thead{font-size:.68rem}}
 .tr4.thead{letter-spacing:0;text-transform:none}.tr4.thead span{overflow:hidden;text-overflow:clip}
+
+.tcomp.tog{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;padding:10px 8px 6px}
+.tcomp.tog small{font-size:.7rem;color:var(--muted);text-transform:none;letter-spacing:.5px}
+.tcomp.tog::after{content:"";margin-left:auto;margin-right:6px;width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+.tcomp.tog.shut::after{transform:rotate(-45deg)}
+.tcomp.tog:hover{background:rgba(255,255,255,.04)}
+.tcomp.tog:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
 </style>
 
 <header class="appbar"><div class="in">
@@ -789,7 +796,8 @@ function renderWeek(){
     if(shut) return;
     let lastK=null;
     dayFx.sort((x,y)=>multi?(x.o-y.o||(x[3]||"").localeCompare(y[3]||"")):0).forEach(f=>{
-      if(multi && f.k!==lastK){ html+=`<div class="tcomp">${esc(cFull(f.k))}</div>`; lastK=f.k; }
+      if(multi && f.k!==lastK){ lastK=f.k; const ck=d+"|"+f.k, cs=!!CDAY[ck], n=dayFx.filter(x=>x.k===f.k).length; html+=`<div class="tcomp tog${cs?" shut":""}" role="button" tabindex="0" aria-expanded="${!cs}" data-cday="${esc(ck)}"><span>${esc(cFull(f.k))}</span><small>${n}</small></div>`; }
+      if(multi && CDAY[d+"|"+f.k]) return;
       use(f.k, !!f.res);
       const r=fullModel(f[1],f[2],f[0]), s=summary(r), key=f.k+"#"+f.slice(0,3).join("|"), mk=r.market;
       const val = mk ? [r.ph,r.pd,r.pa].map((p,k)=>p*mk.o[k]-1) : null;
@@ -815,7 +823,7 @@ function renderWeek(){
   $("tbl").innerHTML=html;
   const selRow = state.open!==false ? [...$("tbl").querySelectorAll("button.trow")].find(b=>b.dataset.k===state.fixture) : null;
   if(selRow){ selRow.after(dw); dw.hidden=false; } else dw.hidden=true;
-  $("tbl").querySelectorAll(".tday.tog").forEach(h=>{
+  $("tbl").querySelectorAll(".tday.tog,.tcomp.tog").forEach(h=>{
     const t=()=>{ const d=h.dataset.cday; CDAY[d]=!CDAY[d]; if(!CDAY[d]) delete CDAY[d]; try{ localStorage.setItem("wk_cday",JSON.stringify(CDAY)); }catch(e){} renderWeek(); };
     h.addEventListener("click",t); h.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); t(); } });
   });
