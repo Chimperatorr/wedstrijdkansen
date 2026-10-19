@@ -113,6 +113,10 @@ NAMES = {
   "Norrkoping": "Norrköping", "Varnamo": "Värnamo", "Oster": "Öster",
   # Eredivisie vorig seizoen (voor degradanten KKD)
   "Heracles Almelo": "Heracles", "NAC Breda": "NAC", "FC Volendam": "Volendam",
+  # aanvulling okt 2026
+  "Coventry": "Coventry City", "Hull": "Hull City", "Nottingham": "Nottingham Forest", "Betis": "Real Betis", "Dep. A Coruna": "Deportivo La Coruña",
+  "B. Monchengladbach": "Mönchengladbach", "Freiburg": "SC Freiburg", "Koln": "1. FC Köln", "FC Koln": "1. FC Köln", "Schalke": "Schalke 04",
+  "Estrela": "Estrela Amadora", "Famalicao": "Famalicão", "Vitoria Guimaraes": "Vitória Guimarães",
 }
 
 NAMES.update({
