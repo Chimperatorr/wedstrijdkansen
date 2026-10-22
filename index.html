@@ -556,7 +556,8 @@ const CMAP = Object.fromEntries(COMPS.map(c=>[c.k,c]));
 const cName = k => CMAP[k]?.n || k, cFull = k => CMAP[k]? CMAP[k].c+" · "+CMAP[k].n : k;
 const PREVLBL = () => /^\d{4}$/.test(DATA.season||"") ? String(+DATA.season-1) : "25/26";
 let RC = {};   // ratings per competitie
-const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0};
+const DEF = {hl:60, k:6, inj:1, rho:-0.08, mw:0.5, cal:1};
+try{ const t=JSON.parse(localStorage.getItem("wk_tune")||"null"); if(t&&t.hl&&t.k&&t.cal) Object.assign(DEF,{hl:t.hl,k:t.k,cal:t.cal}); }catch(e){}
 const state = {more:{}, open:false, sel:["ere"], fk:"ere", comp:"ere", league:"all", home:null, away:null, date:null, fixture:null, week:null, day:"all", ...DEF, adj:{}, off:{}};
 const MAXG = 10, IMP=[0,0.015,0.03,0.06], PROMO={att:0.80,def:1.22};
 const $ = id => document.getElementById(id);
@@ -684,7 +685,14 @@ function modelFor(home, away, date){
   const m=[]; let tot=0;
   for(let i=0;i<=MAXG;i++){ m[i]=[]; for(let j=0;j<=MAXG;j++){ const p=pois(i,lh)*pois(j,la)*Math.max(0,tau(i,j,lh,la,state.rho)); m[i][j]=p; tot+=p; } }
   for(let i=0;i<=MAXG;i++) for(let j=0;j<=MAXG;j++) m[i][j]/=tot;
+  if(state.cal && state.cal!==1) calibrate(m,state.cal);
   return finish({H,A,hn:home,an:away,lh,la,m,date});
+}
+// kalibratie: kansen op 1/X/2 tot de macht c (c<1 trekt naar het midden, c>1 maakt stelliger)
+function calibrate(m,c){
+  let p=[0,0,0]; for(let i=0;i<m.length;i++) for(let j=0;j<m[i].length;j++) p[i>j?0:i===j?1:2]+=m[i][j];
+  const t=p.map(x=>Math.pow(Math.max(x,1e-9),c)), s=t[0]+t[1]+t[2], f=t.map((x,k)=>x/s/Math.max(p[k],1e-9));
+  for(let i=0;i<m.length;i++) for(let j=0;j<m[i].length;j++) m[i][j]*=f[i>j?0:i===j?1:2];
 }
 function finish(r){
   const m=r.m; let ph=0,pd=0,pa=0,o25=0,btts=0,csH=0,csA=0,o15=0,o35=0,eh=0,ea=0; const list=[];
@@ -1099,7 +1107,8 @@ function renderOdds(r){
     [0,1,2].map(k=>`<div class="orow"><span class="ol">${esc(lab[k])}</span><span class="c num">${fmtP(mod[k])}</span><span class="c num b">${fmtP(fin[k])}</span><span class="c num">${fmt2(1/fin[k])}</span>${cell("bet365",o.o365,k,o.auto365)}</div>`).join("")+
     `<div class="orow ofoot"><span class="ol">Marge bookmaker</span><span></span><span></span><span></span><span class="c num">${mg()}</span></div>`;
   const used = r.market && !(state.mw>0) ? "Eindkans = alleen het model; de quoteringen tellen niet mee in de kans en dienen alleen om de verwachte waarde te berekenen." : r.market? `Eindkans = ${Math.round((1-state.mw)*100)}% model + ${Math.round(state.mw*100)}% ${r.market.src} (zonder marge).` : "Nog geen quoteringen voor deze wedstrijd: eindkans = model.";
-  $("oddsNote").textContent = `${used} Het percentage onder een quotering is de verwachte waarde: positief betekent dat de eindkans hoger is dan de quotering suggereert. ${o.auto365?(OLAB()==="bet365"?"bet365":"Hoogste prijs over meerdere bookmakers ("+((DATA.odds||{}).source||"")+")")+" automatisch opgehaald ("+nlDate((DATA.odds||{}).updated||todayISO())+"); ":""}je kunt de quoteringen zelf aanpassen als ze veranderd zijn.`;
+  let gap=""; if(r.market){ const q=implied(r.market.o).q, d=[M.ph-q[0],M.pd-q[1],M.pa-q[2]], mx=d.reduce((a,b)=>Math.abs(b)>Math.abs(a)?b:a,0); if(Math.abs(mx)>=0.08) gap=` Let op: model en markt liggen ${Math.round(Math.abs(mx)*100)} procentpunten uit elkaar (${mx>0?"het model is positiever dan de markt":"de markt is positiever dan het model"} over ${["de thuiswinst","het gelijkspel","de uitwinst"][d.indexOf(mx)]}); kijk of er nieuws is (opstelling, blessure) dat het model niet kent.`; }
+  $("oddsNote").textContent = `${used}${gap} Het percentage onder een quotering is de verwachte waarde: positief betekent dat de eindkans hoger is dan de quotering suggereert. ${o.auto365?(OLAB()==="bet365"?"bet365":"Hoogste prijs over meerdere bookmakers ("+((DATA.odds||{}).source||"")+")")+" automatisch opgehaald ("+nlDate((DATA.odds||{}).updated||todayISO())+"); ":""}je kunt de quoteringen zelf aanpassen als ze veranderd zijn.`;
   $("otbl").querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
     const src=inp.dataset.src, vals=[...$("otbl").querySelectorAll(`input[data-src="${src}"]`)].map(x=>parseFloat(String(x.value).replace(",",".")));
     const cur={...(MANUAL[key]||{})};
@@ -1154,11 +1163,36 @@ function renderTrack(){
   h+=`<div class="tr4 thead"><span>Kans</span><span class="c">Aantal</span><span class="c">Model</span><span class="c">Echt</span><span class="c"></span><span class="c"></span></div>`;
   bk.forEach(([a,b])=>{ let n=0,sp=0,sa=0; rows.forEach(x=>x.P.forEach((p,i)=>{ if(p>=a&&p<b){ n++; sp+=p; if(x.act===i) sa++; } }));
     if(n) h+=`<div class="tr4"><span>${Math.round(a*100)}–${b>1?100:Math.round(b*100)}%</span><span class="c">${n}</span><span class="c">${pc(sp,n)}</span><span class="c">${pc(sa,n)}</span><span class="c"></span><span class="c"></span></div>`; });
+  h+=`<h3>Instellingen afstellen</h3><p class="note">Zoekt op de ${rows.length} gespeelde duels hierboven welke vormweging en prior-sterkte het best voorspelden (laagste log-loss) en of de kansen te stellig of te voorzichtig zijn. Gebruik zoveel mogelijk competities tegelijk: bij minder dan ~300 duels kan de uitkomst op toeval berusten. Huidig: halfwaardetijd ${state.hl} d, prior ${state.k}, kalibratie ${state.cal}.</p><button type="button" class="textbtn" id="tuneBtn">Zoek beste instellingen</button> <button type="button" class="textbtn" id="tuneReset">Standaard terugzetten</button><div id="tuneOut"></div>`;
   const wks=[...new Set(rows.map(x=>x.ws))].sort().reverse();
   h+=`<h3>Per speelweek</h3>`+head("Week vanaf");
   wks.forEach(w=>{ h+=line(esc(toD(w).toLocaleDateString("nl-NL",{day:"numeric",month:"short"})),agg(rows.filter(x=>x.ws===w))); });
   body.innerHTML=h;
 }
+// ---------- Afstellen op het trackrecord ----------
+let TUNE=null;
+const llOf=(rows,c)=>{ let s=0; rows.forEach(x=>{ const t=x.P.map(p=>Math.pow(Math.max(p,1e-9),c)), z=t[0]+t[1]+t[2]; s-=Math.log(t[x.act]/z); }); return s/rows.length; };
+async function tuneRun(){
+  const out=$("tuneOut"), saved={hl:state.hl,k:state.k,cal:state.cal}, tick=()=>new Promise(r=>setTimeout(r,15)), tr=[];
+  const trial=async(hl,k)=>{ state.hl=hl; state.k=k; state.cal=1; RC={}; out.textContent=`Rekenen… halfwaardetijd ${hl} d, prior ${k}`; await tick(); const rows=backtest(); tr.push({hl,k,ll:llOf(rows,1),rows}); };
+  try{
+    for(const hl of [30,45,60,90,120]) await trial(hl,saved.k);
+    const bh=tr.reduce((a,b)=>b.ll<a.ll?b:a).hl;
+    for(const k of [3,6,10,15]) if(!tr.some(t=>t.hl===bh&&t.k===k)) await trial(bh,k);
+    const best=tr.reduce((a,b)=>b.ll<a.ll?b:a);
+    let bc=1, bl=llOf(best.rows,1); for(let c=0.7;c<=1.301;c+=0.05){ const l=llOf(best.rows,c); if(l<bl-1e-9){ bl=l; bc=Math.round(c*100)/100; } }
+    const cur=tr.find(t=>t.hl===saved.hl&&t.k===saved.k)||tr.find(t=>t.hl===60&&t.k===6);
+    TUNE={hl:best.hl,k:best.k,cal:bc,ll:bl,n:best.rows.length,cur:cur?cur.ll:null,tr:tr.map(t=>({hl:t.hl,k:t.k,ll:t.ll}))};
+  } finally { Object.assign(state,saved); RC={}; use(state.fk); }
+  const f=x=>x.toFixed(4).replace(".",","), rowsH=TUNE.tr.sort((a,b)=>a.ll-b.ll).map(t=>`<div class="tr4"><span>Halfwaardetijd ${t.hl} d · prior ${t.k}</span><span class="c num">${f(t.ll)}</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span></div>`).join("");
+  const gain=TUNE.cur!=null? (TUNE.cur-TUNE.ll) : 0;
+  out.innerHTML=`<p class="note"><b>Beste:</b> halfwaardetijd ${TUNE.hl} dagen, prior ${TUNE.k}, kalibratie ${String(TUNE.cal).replace(".",",")} (${TUNE.cal<1?"kansen waren te stellig; ze worden naar het midden getrokken":TUNE.cal>1?"kansen waren te voorzichtig; ze worden stelliger":"kansen waren goed afgesteld"}). Log-loss ${f(TUNE.ll)}${TUNE.cur!=null?` tegenover ${f(TUNE.cur)} nu (verbetering ${f(gain)})`:""} over ${TUNE.n} duels.${TUNE.n<300?" Let op: weinig duels, dus onzeker.":""}${gain<0.002?" Het verschil is klein: aanpassen levert nauwelijks iets op.":""}</p><button type="button" class="textbtn" id="tuneApply">Gebruik deze instellingen</button><div class="tr4 thead"><span>Geprobeerd</span><span class="c">Log-loss</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span></div>${rowsH}`;
+}
+document.addEventListener("click",e=>{
+  if(e.target.id==="tuneBtn"){ e.target.disabled=true; tuneRun().finally(()=>{ e.target.disabled=false; }); }
+  else if(e.target.id==="tuneApply" && TUNE){ Object.assign(state,{hl:TUNE.hl,k:TUNE.k,cal:TUNE.cal}); try{ localStorage.setItem("wk_tune",JSON.stringify({hl:TUNE.hl,k:TUNE.k,cal:TUNE.cal})); }catch(x){} RC={}; renderAll(); }
+  else if(e.target.id==="tuneReset"){ try{ localStorage.removeItem("wk_tune"); }catch(x){} Object.assign(state,{hl:60,k:6,cal:1}); RC={}; renderAll(); }
+});
 function renderAll(){ use(state.fk); syncSliders(); renderWeek(); use(state.fk, !!state.fres); render(); if($('trackD').open) renderTrack(); }
 
 function setStamp(live){
