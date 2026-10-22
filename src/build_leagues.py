@@ -394,10 +394,22 @@ def eu_domestic():
             for t, gf, ga in ((m[1], m[3], m[4]), (m[2], m[4], m[3])):
                 net[t] = net.get(t, 0) + gf - ga; n[t] = n.get(t, 0) + 1
         K = 20
+        # vorm: recente duels wegen zwaarder (halfwaardetijd 45 dagen), 40% van de sterkte
+        import datetime as _dt
+        ref = max((m[0] for m in d.get("matches", [])), default=None)
+        fw, fg = {}, {}
+        if ref:
+            r0 = _dt.date.fromisoformat(ref)
+            for m in d["matches"]:
+                w = 0.5 ** ((r0 - _dt.date.fromisoformat(m[0])).days / 45.0)
+                for t, gf, ga in ((m[1], m[3], m[4]), (m[2], m[4], m[3])):
+                    fw[t] = fw.get(t, 0) + w; fg[t] = fg.get(t, 0) + w * (gf - ga)
         for t in d.get("teams", []):
             pv = (d.get("prev") or {}).get(t)
             pn = (pv[1] - pv[2]) / pv[0] if pv and pv[0] else 0
-            res[(code, t)] = (net.get(t, 0) + K * pn) / (n.get(t, 0) + K) / 1.3 * 0.6 + EU_G[code]
+            season = (net.get(t, 0) + K * pn) / (n.get(t, 0) + K)
+            form = (fg.get(t, 0) + 3 * season) / (fw.get(t, 0) + 3)
+            res[(code, t)] = (0.6 * season + 0.4 * form) / 1.3 * 0.6 + EU_G[code]
     return res
 
 def eu_prior(teams):
