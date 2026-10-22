@@ -593,10 +593,16 @@ function advice(r){
 // ---------- Laatste wedstrijden ----------
 function recentHTML(team, matches){
   const compName = state.comp==="nl" ? "Nations League" : cName(state.fk);
-  const map=new Map();
-  ((DATA.recent||{})[team]||[]).forEach(m=>map.set(m[0],m));
-  (DATA.prevMatches||[]).filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(m[0],[m[0],m[1],m[2],m[3],m[4],compName+" "+PREVLBL()]));
-  matches.filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(m[0],[m[0],m[1],m[2],m[3],m[4],compName]));
+  const map=new Map(), key=m=>m[0]+"|"+m[1]+"|"+m[2];
+  // alle competities: duels van deze ploeg uit elke geladen competitie (binnenland + Europa)
+  if(state.comp!=="nl"){
+    const add=(arr,name)=>(arr||[]).forEach(m=>{ if(m[1]===team||m[2]===team) map.set(key(m),[m[0],m[1],m[2],m[3],m[4],name]); });
+    if(typeof MAIN!=="undefined" && MAIN && MAIN!==DATA) add(MAIN.matches,"Eredivisie");
+    Object.keys(LG).forEach(k=>{ if(LG[k]!==DATA && valid(LG[k])) add(LG[k].matches,cFull(k)); });
+  }
+  ((DATA.recent||{})[team]||[]).forEach(m=>map.set(key(m),m));
+  (DATA.prevMatches||[]).filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(key(m),[m[0],m[1],m[2],m[3],m[4],compName+" "+PREVLBL()]));
+  matches.filter(m=>m[1]===team||m[2]===team).forEach(m=>map.set(key(m),[m[0],m[1],m[2],m[3],m[4],compName]));
   const list=[...map.values()].sort((a,b)=>a[0]<b[0]?1:-1).slice(0,25);
   if(!list.length) return "";
   const open=!!state.more[state.comp+"|"+team], N=5, shown=open?list:list.slice(0,N);
