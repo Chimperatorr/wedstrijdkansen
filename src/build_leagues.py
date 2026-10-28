@@ -120,6 +120,7 @@ NAMES = {
 }
 
 NAMES.update({
+  "Sabah FC": "Sabah Baku", "FC Sabah": "Sabah Baku", "Sabah": "Sabah Baku",
   "Ipswich": "Ipswich Town", "Leeds": "Leeds United", "Manchester Utd": "Manchester United",
   "Birmingham": "Birmingham City", "Blackburn": "Blackburn Rovers", "Bolton": "Bolton Wanderers", "Cardiff": "Cardiff City",
   "Charlton": "Charlton Athletic", "Derby": "Derby County", "Lincoln": "Lincoln City", "Norwich": "Norwich City",
