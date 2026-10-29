@@ -103,7 +103,7 @@ NAMES = {
   # Polen / Oostenrijk / Noorwegen / Turkije / Zwitserland (BetExplorer-namen)
   "Legia": "Legia Warszawa", "Wisla": "Wisła Kraków", "Wisla Plock": "Wisła Płock", "Widzew Lodz": "Widzew Łódź", "Lech Poznan": "Lech Poznań",
   "Gornik Zabrze": "Górnik Zabrze", "Slask Wroclaw": "Śląsk Wrocław", "Pogon Szczecin": "Pogoń Szczecin", "Rakow": "Raków Częstochowa",
-  "Zaglebie": "Zagłębie Lubin", "Wieczysta Krakow": "Wieczysta Kraków", "Jagiellonia": "Jagiellonia Białystok",
+  "Zaglebie": "Zagłębie Lubin", "Zaglebie Lubin": "Zagłębie Lubin", "Wieczysta Krakow": "Wieczysta Kraków", "Jagiellonia": "Jagiellonia Białystok",
   "A. Lustenau": "Austria Lustenau", "Austria Vienna": "Austria Wien", "SK Rapid": "Rapid Wien", "Salzburg": "RB Salzburg", "Tirol": "WSG Tirol", "Ried": "SV Ried",
   "Bodo/Glimt": "Bodø/Glimt", "Valerenga": "Vålerenga", "Tromso": "Tromsø", "Lillestrom": "Lillestrøm",
   "Besiktas": "Beşiktaş", "Fenerbahce": "Fenerbahçe", "Basaksehir": "Başakşehir", "Kasimpasa": "Kasımpaşa", "Goztepe": "Göztepe",
