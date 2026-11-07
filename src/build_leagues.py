@@ -130,14 +130,6 @@ NAMES.update({
   "Nijmegen": "NEC", "AZ Alkmaar": "AZ", "Academico Viseu": "Académico Viseu", "Maritimo": "Marítimo",
 })
 
-NAMES.update({
-  "Braunschweig": "Eintracht Braunschweig", "Cottbus": "Energie Cottbus", "Darmstadt": "Darmstadt 98", "Greuther Furth": "Greuther Fürth",
-  "Hannover": "Hannover 96", "Hertha Berlin": "Hertha BSC", "Nurnberg": "Nürnberg", "SG Dynamo Dresden": "Dynamo Dresden", "VfL Osnabruck": "Osnabrück",
-  "Almere City": "Almere", "Maastricht": "MVV", "Oss": "TOP Oss", "Roda": "Roda JC", "Venlo": "VVV", "Waalwijk": "RKC",
-  "Cercle Brugge KSV": "Cercle Brugge", "Leuven": "OH Leuven", "Lommel SK": "Lommel", "RAAL La Louviere": "La Louvière", "Royale Union SG": "Union SG",
-  "St. Liege": "Standard Luik", "St. Truiden": "Sint-Truiden", "Waregem": "Zulte Waregem",
-})
-
 def nm(s):
     s = s.strip()
     if s in NAMES: return NAMES[s]
