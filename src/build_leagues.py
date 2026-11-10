@@ -436,14 +436,6 @@ def eu_prior(teams):
         prev[t] = [10, round(10 * 1.3 * A, 1), round(10 * 1.3 * D, 1)]
     return prev, ren, unk
 
-NAMES.update({
-  "Braunschweig": "Eintracht Braunschweig", "Cottbus": "Energie Cottbus", "Darmstadt": "Darmstadt 98", "Greuther Furth": "Greuther Fürth",
-  "Almere City": "Almere", "Maastricht": "MVV", "Oss": "TOP Oss", "Roda": "Roda JC", "Venlo": "VVV", "Waalwijk": "RKC",
-  "Cercle Brugge KSV": "Cercle Brugge", "Leuven": "OH Leuven", "Lommel SK": "Lommel", "RAAL La Louviere": "La Louvière", "Royale Union SG": "Union SG",
-  "St. Liege": "Standard Luik", "St. Truiden": "Sint-Truiden", "Waregem": "Zulte Waregem",
-  "Hannover": "Hannover 96", "Hertha Berlin": "Hertha BSC", "Nurnberg": "Nürnberg", "SG Dynamo Dresden": "Dynamo Dresden", "VfL Osnabruck": "Osnabrück",
-})
-
 def main():
     if ARGS.nl_main:
         nl_odds(ARGS.nl_main); return
