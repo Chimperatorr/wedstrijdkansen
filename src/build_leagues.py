@@ -42,6 +42,10 @@ META = {
 }
 
 NAMES = {
+  # BetExplorer KKD / Pro League
+  "Almere City": "Almere", "Maastricht": "MVV", "Oss": "TOP Oss", "Roda": "Roda JC", "Venlo": "VVV", "Waalwijk": "RKC", "FC Emmen": "Emmen", "Eindhoven FC": "Eindhoven",
+  "Cercle Brugge KSV": "Cercle Brugge", "Leuven": "OH Leuven", "Lommel SK": "Lommel", "RAAL La Louviere": "La Louvière", "Royale Union SG": "Union SG",
+  "St. Liege": "Standard Luik", "St. Truiden": "Sint-Truiden", "Waregem": "Zulte Waregem",
   # Engeland
   "AFC Bournemouth": "Bournemouth", "Brighton & Hove Albion FC": "Brighton", "Tottenham Hotspur FC": "Tottenham",
   "Wolverhampton Wanderers FC": "Wolves", "Newcastle United FC": "Newcastle", "West Ham United FC": "West Ham",
@@ -341,7 +345,7 @@ EN = {"Spain":"Spanje","England":"Engeland","France":"Frankrijk","Portugal":"Por
  "Switzerland":"Zwitserland","Norway":"Noorwegen","Croatia":"Kroatië","Germany":"Duitsland","Denmark":"Denemarken","Austria":"Oostenrijk","Turkey":"Turkije","Turkiye":"Turkije","Türkiye":"Turkije",
  "Italy":"Italië","Ukraine":"Oekraïne","Greece":"Griekenland","Scotland":"Schotland","Sweden":"Zweden","Rep of Ireland":"Ierland","Republic of Ireland":"Ierland","Ireland":"Ierland",
  "Kosovo":"Kosovo","Poland":"Polen","Serbia":"Servië","Hungary":"Hongarije","Slovenia":"Slovenië","Wales":"Wales","Czechia":"Tsjechië","Czech Republic":"Tsjechië",
- "Northern Ireland":"Noord-Ierland","Romania":"Roemenië","Georgia":"Georgië","Bosnia-Herzegovina":"Bosnië en Herzegovina","Bosnia and Herzegovina":"Bosnië en Herzegovina","Bosnia":"Bosnië en Herzegovina",
+ "Northern Ireland":"Noord-Ierland","Romania":"Roemenië","Georgia":"Georgië","Bosnia-Herzegovina":"Bosnië en Herzegovina","Bosnia and Herzegovina":"Bosnië en Herzegovina","Bosnia":"Bosnië en Herzegovina","Bosnia & Herzegovina":"Bosnië en Herzegovina",
  "Israel":"Israël","North Macedonia":"Noord-Macedonië","Slovakia":"Slowakije","Albania":"Albanië","Iceland":"IJsland","Finland":"Finland","Belarus":"Wit-Rusland",
  "Luxembourg":"Luxemburg","Montenegro":"Montenegro","Bulgaria":"Bulgarije","Kazakhstan":"Kazachstan","Armenia":"Armenië","Faroe Islands":"Faeröer","Estonia":"Estland",
  "Azerbaijan":"Azerbeidzjan","Cyprus":"Cyprus","Lithuania":"Litouwen","Latvia":"Letland","Malta":"Malta","Moldova":"Moldavië","Andorra":"Andorra","Gibraltar":"Gibraltar",
