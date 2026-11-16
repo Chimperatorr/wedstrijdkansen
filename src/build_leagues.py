@@ -234,7 +234,7 @@ def norm(s):
     s = s.replace("inter milan", "inter").replace("m'gladbach", "monchengladbach").replace("borussia monchengladbach", "monchengladbach").replace("borussia mgladbach", "monchengladbach").replace("cologne", "koln")
     s = s.replace("sheff utd", "sheffield united").replace("sheff wed", "sheffield wednesday").replace("wolverhampton", "wolves")
     s = s.replace("maastricht", "mvv").replace("venlo", "vvv").replace("bruges", "brugge").replace("st. truidense", "sint truiden").replace("st truidense", "sint truiden")
-    s = s.replace("standard liege", "standard luik").replace("union saint-gilloise", "union sg").replace("oud-heverlee leuven", "oh leuven").replace("royal antwerp", "antwerp")
+    s = s.replace("standard liege", "standard luik").replace("st. liege", "standard luik").replace("union saint-gilloise", "union sg").replace("oud-heverlee leuven", "oh leuven").replace("royal antwerp", "antwerp")
     s = s.replace("sporting lisbon", "sporting cp").replace("benfica lisbon", "benfica").replace("vitoria sc guimaraes", "vitoria guimaraes").replace("hertha bsc berlin", "hertha")
     s = s.replace("fc copenhagen", "fc kobenhavn").replace("copenhagen", "kobenhavn").replace("agf aarhus", "agf").replace("vasteraas", "vasteras").replace("malmo ff", "malmo").replace("sonderjyske", "sonderjyske")
     s = s.replace("alto adige", "sudtirol").replace("nancy-lorraine", "nancy").replace("red star 93", "red star").replace("real sociedad san sebastian b", "real sociedad b").replace("clermont foot", "clermont")
