@@ -289,7 +289,7 @@ def b365_load(code, fixtures):
         best, bs = None, 0
         for f in fixtures:
             if f[0] not in near: continue
-            s = sim(p[1], f[1]) + sim(p[2], f[2])
+            s = max(sim(p[1], f[1]), sim(nm(p[1]), f[1])) + max(sim(p[2], f[2]), sim(nm(p[2]), f[2]))
             if s > bs: best, bs = f, s
         if best and bs >= 1.4:
             if abs((datetime.date.fromisoformat(best[0]) - dd).days) > 1:
