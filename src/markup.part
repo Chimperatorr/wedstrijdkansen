@@ -152,7 +152,7 @@ const COMPS = [
   {k:"fr1",c:"Frankrijk",n:"Ligue 1"},{k:"fr2",c:"Frankrijk",n:"Ligue 2"},{k:"pt1",c:"Portugal",n:"Liga Portugal"},
   {k:"be1",c:"België",n:"Pro League"},
   {k:"dk1",c:"Denemarken",n:"Superliga"},{k:"se1",c:"Zweden",n:"Allsvenskan"},
-  {k:"pl1",c:"Polen",n:"Ekstraklasa"},{k:"no1",c:"Noorwegen",n:"Eliteserien"},{k:"at1",c:"Oostenrijk",n:"Bundesliga"},{k:"tr1",c:"Turkije",n:"Süper Lig"},{k:"ch1",c:"Zwitserland",n:"Super League"},
+  {k:"pl1",c:"Polen",n:"Ekstraklasa"},{k:"no1",c:"Noorwegen",n:"Eliteserien"},{k:"at1",c:"Oostenrijk",n:"Bundesliga"},{k:"tr1",c:"Turkije",n:"Süper Lig"},{k:"ch1",c:"Zwitserland",n:"Super League"},{k:"mls",c:"Verenigde Staten",n:"MLS"},
   {k:"ucl",c:"Europa",n:"Champions League"},{k:"uel",c:"Europa",n:"Europa League"},{k:"uecl",c:"Europa",n:"Conference League"},
   {k:"nl:all",c:"Internationaal",n:"Nations League"}
 ];

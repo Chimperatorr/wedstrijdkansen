@@ -36,6 +36,7 @@ META = {
   "pt1": {"name": "Liga Portugal", "country": "Portugal", "of": "pt.1", "tz": 1, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
   "nl2": {"name": "Keuken Kampioen Divisie", "country": "Nederland", "fc": "nl.2", "tz": 0, "up": "ere", "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt"},
   "be1": {"name": "Pro League", "country": "België", "fc": "be.1", "prevof": "be.1", "tz": 0, "up": None, "down": None, "osrc": "sportytrader.com (hoogste prijs)", "olabel": "markt"},
+  "mls": {"name": "MLS", "country": "Verenigde Staten", "fc": "mls", "tz": 0, "up": None, "down": None, "osrc": "oddsportal.com (gemiddelde)", "olabel": "markt", "src": "fixturedownload.com + betexplorer.com", "season": "2026"},
   "ucl": {"name": "Champions League", "country": "Europa", "fc": "ucl", "tz": 0, "eu": True, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "uel": {"name": "Europa League", "country": "Europa", "fc": "uel", "tz": 0, "eu": True, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
   "uecl": {"name": "Conference League", "country": "Europa", "fc": "uecl", "tz": 0, "eu": True, "up": None, "down": None, "osrc": "oddschecker.com (hoogste prijs)", "olabel": "markt", "src": "betexplorer.com"},
